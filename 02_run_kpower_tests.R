@@ -18,15 +18,15 @@ library(ggplot2)
 # expect many hours of runtime; the script is resumable so it's safe to stop.
 K_MAX      <- 6        # evaluate K = 1..K_MAX
 B          <- 20       # bootstrap replicates per family
-N_CORES    <- 8        # parallel R workers (bootstrap refits)
+N_CORES    <- 10        # parallel R workers (bootstrap refits)
 THREADS    <- 1        # IQ-TREE threads per run; bump for L=10000 if RAM ok
 FIXED_TREE <- NULL     # NULL = --fast heuristic (IQ-TREE 3.0.1 ARM BioNJ bug)
 FAST_TREES <- TRUE     # GTR+R --fast for MAST candidate trees (skip MFP)
 MIX_TYPES  <- c("+R", "+H", "+T")
 
-IQTREE <- Sys.which("iqtree3")
-if (!nzchar(IQTREE))
-  IQTREE <- path.expand("~/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3")
+IQTREE <- Sys.which("iqtree2")
+#if (!nzchar(IQTREE))
+#  IQTREE <- path.expand("~/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3")
 
 SCRIPT_DIR <- tryCatch(
   dirname(normalizePath(sys.frame(1)$ofile, mustWork = FALSE)),
@@ -34,8 +34,16 @@ SCRIPT_DIR <- tryCatch(
 )
 ALIGN_BASE <- file.path(SCRIPT_DIR, "alignments")
 OUT_BASE   <- file.path(SCRIPT_DIR, "results")
-SUMMARY_CSV <- file.path(OUT_BASE, "summary.csv")
+SUMMARY_CSV  <- file.path(OUT_BASE, "summary.csv")
+FAILURES_LOG <- file.path(OUT_BASE, "failures.log")
 dir.create(OUT_BASE, showWarnings = FALSE, recursive = TRUE)
+
+#' Append a one-line entry to the failures log
+log_failure <- function(label, msg) {
+  cat(sprintf("[%s]  %s  --  %s\n",
+              format(Sys.time(), "%Y-%m-%d %H:%M:%S"), label, msg),
+      file = FAILURES_LOG, append = TRUE)
+}
 
 check_iqtree(IQTREE)
 
@@ -138,11 +146,23 @@ for (i in seq_along(todo)) {
       threads    = THREADS
     ),
     error = function(e) {
-      warning("Survey failed for ", label, ": ", conditionMessage(e))
+      msg <- paste("survey crashed:", conditionMessage(e))
+      message("!!! FAILED ", label, " -- ", msg)
+      log_failure(label, msg)
       NULL
     }
   )
   if (is.null(surv)) next
+
+  # --- Per-family failure check -------------------------------------------
+  null_fams <- names(surv$families)[vapply(surv$families, is.null,
+                                           logical(1))]
+  if (length(null_fams) > 0) {
+    msg <- paste("family(ies) returned NULL:",
+                 paste(null_fams, collapse = ", "))
+    message("!!! FAMILY FAIL ", label, " -- ", msg)
+    log_failure(label, msg)
+  }
 
   saveRDS(surv, file.path(res_dir, "survey_result.rds"))
 

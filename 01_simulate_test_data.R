@@ -29,9 +29,9 @@ library(phangorn)
 # --- Configuration ----------------------------------------------------------
 set.seed(42)
 
-IQTREE  <- Sys.which("iqtree3")
-if (!nzchar(IQTREE))
-  IQTREE <- path.expand("~/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3")
+IQTREE  <- Sys.which("iqtree2")
+#if (!nzchar(IQTREE))
+#  IQTREE <- path.expand("~/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3")
 
 N_TAXA          <- 20
 LENGTHS         <- c(100, 300, 1000, 3000, 10000)
