@@ -34,7 +34,7 @@ IQTREE  <- Sys.which("iqtree2")
 #  IQTREE <- path.expand("~/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3")
 
 N_TAXA          <- 20
-LENGTHS         <- c(100, 300, 1000, 3000, 10000)
+LENGTHS         <- c(100, 300, 1000, 3000, 6000)
 TARGET_MEAN_RTT <- 0.45            # mean root-to-tip subs/site (Duchene 2017)
 KS              <- c(2, 4)
 
