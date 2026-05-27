@@ -45,41 +45,55 @@ files in `results/<scenario>/`.
 
 ## Test design
 
-**18 scenarios** across three model families, two signal strengths
-("sep" and "close"), and two alignment lengths (100 and 1000 sites):
+**48 scenarios** = 3 model families x 2 values of K (2 and 4) x 2 signal
+strengths ("sep" and "close") x 4 alignment lengths (100, 300, 1000,
+3000 sites):
 
 | Family | Scenarios | Signal |
 |---|---|---|
-| **+R** (FreeRate) | 8 (K=2 and K=4) | Rate categories with known proportions |
-| **+H** (GHOST) | 6 (K=2 and K=3) | Per-branch lognormal heterotachy |
-| **+T** (MAST) | 4 (K=2) | Distinct topologies via NNI perturbation |
+| **+R** (FreeRate) | 20 (K=2 and K=4) | Rate categories with known proportions |
+| **+H** (GHOST) | 20 (K=2 and K=4) | Per-branch lognormal heterotachy |
+| **+T** (MAST) | 20 (K=2 and K=4) | Distinct topologies via NNI perturbation |
 
 **Shared parameters:**
 - 20 taxa, random tree scaled to mean root-to-tip = 0.45 subs/site
   (Duchene et al. 2017, Syst Biol 66:769-785)
 - GTR model with strong transition bias (A-C=5, A-G=1, ...)
 - B = 20 bootstrap replicates per family (low, for speed)
-- K_MAX = 4
+- K_MAX = 5
 
 See [TESTS_BRIEF.md](TESTS_BRIEF.md) for full scenario details,
 parameter tables, results, and discussion.
 
 ## Current results
 
-Family correct: **11/18 (61%)** | K correct: **6/18 (33%)**
+> Note: the numbers below are from the earlier 5-length grid (max
+> L=6000, 60 scenarios). The suite now runs 4 lengths (max L=3000, 48
+> scenarios); rerun `02`-`04` to regenerate. The L=6000 column will
+> disappear and the per-family tallies drop from /20 to /16.
 
-Detection succeeds for well-separated scenarios at L=1000:
+Family correct: **32/60 (53%)** | K correct: **20/60 (33%)**
 
-| Condition | L=100 | L=1000 |
-|---|---|---|
-| +R K=2 sep (rates 0.1 vs 2.5) | OK | OK |
-| +H K=2 sep (log_sd=1.5) | -- | OK |
-| +H K=3 sep (log_sd=1.5) | -- | OK |
-| +T K=2 sep (RF=16/34) | -- | OK |
+By family (family-correct / K-correct out of 20 each):
 
-Short alignments (L=100) generally lack power. "Close" scenarios
-(subtle class differences) are not detected -- as expected for a
-power assessment tool.
+| Family | Family correct | K correct | Notes |
+|---|---|---|---|
+| **+R** | 19/20 (95%) | 10/20 | Family almost always right; K caps at 3 for true K=4 |
+| **+H** | 9/20 (45%) | 7/20 | Detected only for "sep" at L>=300 |
+| **+T** | 4/20 (20%) | 3/20 | Rarely detected, but rock-solid when it is (power ~0.95) |
+
+Detection is driven by both signal strength and length. Family-correct
+rate by length: 25% (L=100), 50% (300), 50% (1000), 75% (3000), 67%
+(6000). By signal: 73% for "sep" vs 33% for "close".
+
+Short alignments (L=100) lack power across the board. "Close" scenarios
+(subtle class differences) are mostly undetected -- as expected for a
+power tool -- with one striking exception: +T close (RF=2) reaches 90%
+power at L=6000, showing even a tiny topological split is recoverable
+given enough data.
+
+See `results/power_heatmap.pdf` for the full power grid and
+`results/selection_K{2,4}.pdf` for per-bootstrap family selection.
 
 ## Bugs found and fixed
 

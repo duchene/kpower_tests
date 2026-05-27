@@ -14,7 +14,7 @@ library(kpower)
 library(ggplot2)
 
 # --- Configuration ----------------------------------------------------------
-# Edit these for server runs. With 60 scenarios at K_MAX=6 and L up to 10000,
+# Edit these for server runs. With 48 scenarios at K_MAX=5 and L up to 3000,
 # expect many hours of runtime; the script is resumable so it's safe to stop.
 K_MAX      <- 5        # evaluate K = 1..K_MAX
 B          <- 20       # bootstrap replicates per family
