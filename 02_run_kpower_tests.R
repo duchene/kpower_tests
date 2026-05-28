@@ -17,7 +17,7 @@ library(ggplot2)
 # Edit these for server runs. With 48 scenarios at K_MAX=5 and L up to 3000,
 # expect many hours of runtime; the script is resumable so it's safe to stop.
 K_MAX      <- 5        # evaluate K = 1..K_MAX
-B          <- 20       # bootstrap replicates per family
+B          <- 50       # bootstrap replicates per family
 N_CORES    <- 10       # parallel R workers (bootstrap refits)
 THREADS    <- 2        # IQ-TREE threads per run; bump for L=10000 if RAM ok
 FIXED_TREE <- NULL     # NULL = --fast heuristic (IQ-TREE 3.0.1 ARM BioNJ bug)

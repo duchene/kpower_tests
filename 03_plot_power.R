@@ -20,7 +20,7 @@ SUMMARY_CSV <- file.path(OUT_BASE, "summary.csv")
 if (!file.exists(SUMMARY_CSV))
   stop("No summary.csv. Run 02_run_kpower_tests.R first.")
 
-B <- 20   # number of bootstrap replicates used in 02
+B <- 50   # number of bootstrap replicates used in 02
 
 # Wilson 95% CI for a binomial proportion -- robust for small n / p near 0 or 1
 wilson_ci <- function(p, n, z = 1.959964) {

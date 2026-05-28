@@ -11,15 +11,15 @@
 # identically to K=2 and K=4:
 #   +R: rates are a geometric series from 1/s to s, equal proportions,
 #       rescaled so weighted mean rate = 1 (preserves overall tree length)
-#       sep   -> s = 5     (25x fast/slow ratio)
-#       close -> s = 1.86  (~3.5x ratio)
+#       sep   -> s = 10    (100x fast/slow ratio)
+#       close -> s = 2.5   (~6x ratio)
 #   +H: each class has independently-perturbed branch lengths via lognormal
 #       deviates with sd = log_sd
-#       sep   -> log_sd = 1.5
-#       close -> log_sd = 0.3
+#       sep   -> log_sd = 2.0
+#       close -> log_sd = 0.6
 #   +T: K class trees, each separated from a base tree by n_nni NNI moves
-#       sep   -> n_nni = 10  (RF~16, ~47% of max for 20 taxa)
-#       close -> n_nni = 1   (RF~2)
+#       sep   -> n_nni = 15  (RF~22-24, ~70% of max for 20 taxa)
+#       close -> n_nni = 4   (RF~8)
 #
 # Output: kpower_tests/alignments/<scenario>/sim.phy + sim_params.txt
 
@@ -47,9 +47,9 @@ dir.create(OUT_BASE, showWarnings = FALSE, recursive = TRUE)
 
 # Spread parameters per class type (identical across K within a family)
 SPREAD <- list(
-  R = list(sep = 5.0,  close = 1.86),   # geometric spread for rates
-  H = list(sep = 1.5,  close = 0.3),    # log_sd for branch perturbation
-  T = list(sep = 10L,  close = 1L)      # NNI moves between class trees
+  R = list(sep = 10.0, close = 2.5),    # geometric spread for rates
+  H = list(sep = 2.0,  close = 0.6),    # log_sd for branch perturbation
+  T = list(sep = 15L,  close = 4L)      # NNI moves between class trees
 )
 
 # Shared GTR -- strong ti/tv bias, realistic for nuclear DNA
@@ -122,11 +122,18 @@ concat_phy <- function(phy_files, outfile) {
   outfile
 }
 
-#' Heterotachous tree: independently perturb each branch by a lognormal deviate
+#' Heterotachous tree: independently perturb each branch by a lognormal deviate,
+#' then rescale all branches uniformly so this class's total tree length matches
+#' the base tree's. Preserves the heterotachy *proportions* signal (relative
+#' branch lengths differ between classes) while removing the systematic rate
+#' inflation that lognormal multipliers introduce (E[exp(N(0, sd^2))] = exp(sd^2/2)).
+#' See CLAUDE.md "+H per-class rate inflation" for rationale.
 heterotachy_tree <- function(tr, log_sd = 1.0, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
-  noise <- exp(rnorm(length(tr$edge.length), mean = 0, sd = log_sd))
+  base_TL <- sum(tr$edge.length)
+  noise   <- exp(rnorm(length(tr$edge.length), mean = 0, sd = log_sd))
   tr$edge.length <- tr$edge.length * noise
+  tr$edge.length <- tr$edge.length * (base_TL / sum(tr$edge.length))
   tr
 }
 
