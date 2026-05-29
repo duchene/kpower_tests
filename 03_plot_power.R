@@ -1,12 +1,21 @@
 # kpower simulation tests -- Step 3: Summary plots from results/summary.csv
 #
-# Two outputs:
-#   1. results/power_heatmap.pdf
-#      Grid view: rows = (family, class), columns = length, fill = BIC
-#      power. Faceted by K=2 / K=4.
-#   2. results/power_K{2,4}_by_{family,class,combined}.pdf  (6 PDFs)
-#      Line plots: x=length (log), y=BIC power, 6 lines per panel
-#      (3 families x 2 classes), coloured by family / class / both.
+# Aggregates across reps (Stage 2: multiple realisations per scenario).
+# For each scenario:
+#   mean_power  = mean of power_BIC across reps
+#   se_power    = standard error of the mean across reps (sd / sqrt(n_reps))
+#   ci_lo / hi  = mean +/- 1.96 * se (between-rep 95% CI; Wald)
+#
+# This is the *outer* CI -- it captures alignment-realisation variation,
+# which is the variance component the within-rep bootstrap CI cannot see.
+# The within-rep Wilson CI on B is still informative but is no longer
+# the headline -- it's now nested inside the across-rep aggregate.
+#
+# Outputs:
+#   results/power_heatmap.pdf
+#     rows = (family, class), columns = length, fill = mean BIC power.
+#   results/power_K{2,4}_by_{family,class,combined}.pdf  (6 PDFs)
+#     line plots: x = length (log), y = mean BIC power, ribbon = +/- 1.96 SE.
 
 library(ggplot2)
 
@@ -20,20 +29,28 @@ SUMMARY_CSV <- file.path(OUT_BASE, "summary.csv")
 if (!file.exists(SUMMARY_CSV))
   stop("No summary.csv. Run 02_run_kpower_tests.R first.")
 
-B <- 50   # number of bootstrap replicates used in 02
+raw <- read.csv(SUMMARY_CSV, stringsAsFactors = FALSE)
+if (!"rep" %in% names(raw)) raw$rep <- 1L   # back-compat with pre-Stage-2 csv
 
-# Wilson 95% CI for a binomial proportion -- robust for small n / p near 0 or 1
-wilson_ci <- function(p, n, z = 1.959964) {
-  denom  <- 1 + z^2 / n
-  centre <- (p + z^2 / (2 * n)) / denom
-  half   <- z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2)) / denom
-  list(lo = pmax(0, centre - half), hi = pmin(1, centre + half))
-}
-
-d <- read.csv(SUMMARY_CSV, stringsAsFactors = FALSE)
-ci <- wilson_ci(d$power_BIC, B)
-d$ci_lo <- ci$lo
-d$ci_hi <- ci$hi
+# --- Aggregate across reps --------------------------------------------------
+agg <- aggregate(
+  power_BIC ~ scenario + true_type + true_K + tag + seq_length,
+  data = raw, FUN = function(x) c(
+    mean   = mean(x, na.rm = TRUE),
+    sd     = if (sum(!is.na(x)) > 1) sd(x, na.rm = TRUE) else 0,
+    n      = sum(!is.na(x))
+  )
+)
+# aggregate returns a matrix in $power_BIC; flatten
+d <- data.frame(
+  agg[, !names(agg) %in% "power_BIC"],
+  mean_power = agg$power_BIC[, "mean"],
+  sd_power   = agg$power_BIC[, "sd"],
+  n_reps     = as.integer(agg$power_BIC[, "n"])
+)
+d$se_power <- ifelse(d$n_reps > 1, d$sd_power / sqrt(d$n_reps), NA_real_)
+d$ci_lo    <- pmax(0, d$mean_power - 1.959964 * d$se_power)
+d$ci_hi    <- pmin(1, d$mean_power + 1.959964 * d$se_power)
 d$true_type    <- factor(d$true_type, levels = c("+R", "+H", "+T"))
 d$tag          <- factor(d$tag,       levels = c("sep", "close"))
 d$true_K       <- as.integer(d$true_K)
@@ -43,6 +60,9 @@ d$row_label    <- factor(
   levels = c("+R sep", "+R close", "+H sep", "+H close", "+T sep", "+T close")
 )
 
+n_reps_used <- max(d$n_reps, na.rm = TRUE)
+message(sprintf("Aggregating across up to %d reps per scenario", n_reps_used))
+
 base_theme <- theme_minimal(base_size = 12) +
   theme(panel.grid.minor = element_blank())
 
@@ -50,17 +70,18 @@ base_theme <- theme_minimal(base_size = 12) +
 # 1. Heatmap ----------------------------------------------------------------
 heatmap_plot <- ggplot(d, aes(x = factor(seq_length),
                               y = row_label,
-                              fill = power_BIC)) +
+                              fill = mean_power)) +
   geom_tile(colour = "white") +
-  geom_text(aes(label = sprintf("%.0f%%", 100 * power_BIC)),
+  geom_text(aes(label = sprintf("%.0f%%", 100 * mean_power)),
             size = 3, colour = "black") +
   facet_wrap(~ paste("K =", true_K), nrow = 1) +
   scale_fill_gradient2(low = "#fde0dd", mid = "#fa9fb5", high = "#7a0177",
                        midpoint = 0.5, limits = c(0, 1),
-                       breaks = seq(0, 1, 0.25), name = "BIC power") +
+                       breaks = seq(0, 1, 0.25), name = "BIC power\n(mean)") +
   scale_y_discrete(limits = rev) +
   labs(x = "Sequence length (sites)", y = NULL,
-       title = "Power to recover true (family, K) -- by BIC") +
+       title = sprintf("Power to recover true (family, K) -- mean BIC across %d reps",
+                       n_reps_used)) +
   base_theme +
   theme(legend.position = "right",
         strip.text = element_text(face = "bold"))
@@ -77,7 +98,7 @@ y_pwr <- scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2))
 
 plot_one <- function(df, K, color_var, color_lab, title) {
   sub <- df[df$true_K == K, ]
-  ggplot(sub, aes(x = seq_length, y = power_BIC,
+  ggplot(sub, aes(x = seq_length, y = mean_power,
                   colour = .data[[color_var]],
                   fill   = .data[[color_var]],
                   group  = interaction(true_type, tag))) +
@@ -87,7 +108,7 @@ plot_one <- function(df, K, color_var, color_lab, title) {
     geom_point(size = 2) +
     x_log + y_pwr +
     labs(x = "Sequence length (sites, log scale)",
-         y = "BIC power",
+         y = "BIC power (mean across reps)",
          colour = color_lab, fill = color_lab, title = title) +
     base_theme + theme(legend.position = "right")
 }

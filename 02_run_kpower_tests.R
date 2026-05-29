@@ -1,12 +1,13 @@
 # kpower simulation tests -- Step 2: Survey families on each alignment
 #
-# For each simulated alignment, run kpower_survey() across +R, +H, +T and
-# compute "ground-truth power" per IC: the proportion of bootstrap replicates
-# in which the best (family, K) across all families matches the true
-# (family, K) used to generate the data.
+# For each (scenario, rep) realisation, run kpower_survey() across +R, +H, +T
+# and compute "ground-truth power" per IC: the proportion of bootstrap
+# replicates in which the best (family, K) across all families matches the
+# true (family, K) used to generate the data.
 #
-# Writes results/summary.csv with one row per scenario and per-IC power.
-# The script is resumable: scenarios already in summary.csv are skipped.
+# Writes results/summary.csv with one row per (scenario, rep), with per-IC
+# power and a `rep` column. Resumable: any (scenario, rep) already in
+# summary.csv is skipped.
 #
 # Run 01_simulate_test_data.R first.
 
@@ -14,12 +15,12 @@ library(kpower)
 library(ggplot2)
 
 # --- Configuration ----------------------------------------------------------
-# Edit these for server runs. With 48 scenarios at K_MAX=5 and L up to 3000,
-# expect many hours of runtime; the script is resumable so it's safe to stop.
+# 48 scenarios x N_REPS realisations. With B=50, N_REPS=10, K_MAX=5,
+# expect ~7-8 days of runtime. Resumable; safe to stop.
 K_MAX      <- 5        # evaluate K = 1..K_MAX
 B          <- 50       # bootstrap replicates per family
 N_CORES    <- 10       # parallel R workers (bootstrap refits)
-THREADS    <- 2        # IQ-TREE threads per run; bump for L=10000 if RAM ok
+THREADS    <- 2        # IQ-TREE threads per run
 FIXED_TREE <- NULL     # NULL = --fast heuristic (IQ-TREE 3.0.1 ARM BioNJ bug)
 FAST_TREES <- TRUE     # GTR+R --fast for MAST candidate trees (skip MFP)
 MIX_TYPES  <- c("+R", "+H", "+T")
@@ -52,12 +53,7 @@ check_iqtree(IQTREE)
 
 #' Compute fraction of bootstrap replicates whose minimum IC across all
 #' (family, K) combinations matches (true_type, true_K).
-#'
-#' families: list of survey-family results, each with $sim_ic (data frame
-#'   with columns replicate, K, AIC, AICc, BIC).
-#' Returns a named numeric vector: AIC, AICc, BIC.
 ground_truth_power <- function(families, true_type, true_K) {
-  # Long table: one row per (replicate, mix_type, K)
   parts <- lapply(names(families), function(mt) {
     fam <- families[[mt]]
     if (is.null(fam) || is.null(fam$sim_ic)) return(NULL)
@@ -91,29 +87,46 @@ read_params <- function(path) {
 }
 
 
+# --- Discover (scenario, rep) tuples ----------------------------------------
+# alignments/<scenario>/rep_NN/sim_params.txt
+rep_dirs <- Sys.glob(file.path(ALIGN_BASE, "*", "rep_*"))
+rep_dirs <- rep_dirs[file.exists(file.path(rep_dirs, "sim_params.txt"))]
+if (length(rep_dirs) == 0)
+  stop("No rep dirs found under ", ALIGN_BASE,
+       ". Run 01_simulate_test_data.R first.")
+
+# Build a tidy index: scenario, rep, dir. Sort by rep first then scenario
+# so an interrupted run yields complete "passes" (all scenarios at rep 1
+# before any at rep 2).
+scenario  <- basename(dirname(rep_dirs))
+rep       <- as.integer(sub("^rep_", "", basename(rep_dirs)))
+idx       <- order(rep, scenario)
+rep_dirs  <- rep_dirs[idx]
+scenario  <- scenario[idx]
+rep       <- rep[idx]
+
+
 # --- Resume support ---------------------------------------------------------
 existing <- if (file.exists(SUMMARY_CSV))
   read.csv(SUMMARY_CSV, stringsAsFactors = FALSE) else NULL
-done_set <- if (!is.null(existing)) existing$scenario else character()
+done_keys <- if (!is.null(existing) && "rep" %in% names(existing))
+  paste(existing$scenario, existing$rep, sep = "::") else character()
 
+todo_keys <- paste(scenario, rep, sep = "::")
+todo_mask <- !(todo_keys %in% done_keys)
+message(sprintf("Found %d (scenario, rep) tuples; %d already done; %d to run.",
+                length(rep_dirs), sum(!todo_mask), sum(todo_mask)))
 
-# --- Discover scenarios -----------------------------------------------------
-scenario_dirs <- sort(list.dirs(ALIGN_BASE, recursive = FALSE,
-                                full.names = TRUE))
-scenario_dirs <- scenario_dirs[file.exists(file.path(scenario_dirs,
-                                                     "sim_params.txt"))]
-if (length(scenario_dirs) == 0)
-  stop("No scenarios found. Run 01_simulate_test_data.R first.")
-
-todo <- scenario_dirs[!basename(scenario_dirs) %in% done_set]
-message(sprintf("Found %d scenarios; %d already done; %d to run.",
-                length(scenario_dirs), length(done_set), length(todo)))
+todo_dirs <- rep_dirs[todo_mask]
+todo_scen <- scenario[todo_mask]
+todo_rep  <- rep[todo_mask]
 
 
 # --- Main loop --------------------------------------------------------------
-for (i in seq_along(todo)) {
-  sc_dir <- todo[i]
-  label  <- basename(sc_dir)
+for (i in seq_along(todo_dirs)) {
+  sc_dir <- todo_dirs[i]
+  label  <- todo_scen[i]
+  r      <- todo_rep[i]
   params <- read_params(file.path(sc_dir, "sim_params.txt"))
   true_K    <- as.integer(params$K)
   true_type <- params$type
@@ -122,13 +135,14 @@ for (i in seq_along(todo)) {
 
   align_file <- file.path(sc_dir, "sim.phy")
   if (!file.exists(align_file)) {
-    warning("No sim.phy for ", label, " -- skipping."); next
+    warning("No sim.phy for ", label, " rep=", r, " -- skipping."); next
   }
 
-  message(sprintf("\n[%d/%d] %s  (true: %s K=%d, %s, L=%d)",
-                  i, length(todo), label, true_type, true_K, tag, len))
+  message(sprintf("\n[%d/%d] %s rep=%02d  (true: %s K=%d, %s, L=%d)",
+                  i, length(todo_dirs), label, r,
+                  true_type, true_K, tag, len))
 
-  res_dir <- file.path(OUT_BASE, label)
+  res_dir <- file.path(OUT_BASE, label, sprintf("rep_%02d", r))
   dir.create(res_dir, showWarnings = FALSE, recursive = TRUE)
 
   surv <- tryCatch(
@@ -147,21 +161,20 @@ for (i in seq_along(todo)) {
     ),
     error = function(e) {
       msg <- paste("survey crashed:", conditionMessage(e))
-      message("!!! FAILED ", label, " -- ", msg)
-      log_failure(label, msg)
+      message("!!! FAILED ", label, " rep=", r, " -- ", msg)
+      log_failure(paste0(label, "/rep_", sprintf("%02d", r)), msg)
       NULL
     }
   )
   if (is.null(surv)) next
 
-  # --- Per-family failure check -------------------------------------------
   null_fams <- names(surv$families)[vapply(surv$families, is.null,
                                            logical(1))]
   if (length(null_fams) > 0) {
     msg <- paste("family(ies) returned NULL:",
                  paste(null_fams, collapse = ", "))
-    message("!!! FAMILY FAIL ", label, " -- ", msg)
-    log_failure(label, msg)
+    message("!!! FAMILY FAIL ", label, " rep=", r, " -- ", msg)
+    log_failure(paste0(label, "/rep_", sprintf("%02d", r)), msg)
   }
 
   saveRDS(surv, file.path(res_dir, "survey_result.rds"))
@@ -176,13 +189,13 @@ for (i in seq_along(todo)) {
     )
   }
 
-  # --- Build summary row --------------------------------------------------
   comp <- surv$comparison
   best <- surv$best
   gtp  <- ground_truth_power(surv$families, true_type, true_K)
 
   row <- data.frame(
     scenario       = label,
+    rep            = r,
     true_type      = true_type,
     true_K         = true_K,
     tag            = tag,
@@ -195,6 +208,8 @@ for (i in seq_along(todo)) {
     power_AIC      = round(unname(gtp["AIC"]),  4),
     power_AICc     = round(unname(gtp["AICc"]), 4),
     power_BIC      = round(unname(gtp["BIC"]),  4),
+    elapsed_sec    = if (!is.null(surv$elapsed)) round(surv$elapsed, 1)
+                     else NA_real_,
     stringsAsFactors = FALSE
   )
 
@@ -206,11 +221,12 @@ for (i in seq_along(todo)) {
                                       else NA
   }
 
-  message(sprintf("  best=%s K=%d | gt-power AIC=%.2f AICc=%.2f BIC=%.2f",
+  message(sprintf("  best=%s K=%d | gt-power AIC=%.2f AICc=%.2f BIC=%.2f%s",
                   best$mix_type, best$K,
-                  gtp["AIC"], gtp["AICc"], gtp["BIC"]))
+                  gtp["AIC"], gtp["AICc"], gtp["BIC"],
+                  if (!is.null(surv$elapsed))
+                    sprintf("  | elapsed %.0fs", surv$elapsed) else ""))
 
-  # Append to summary.csv immediately (resume safety)
   write.table(
     row, SUMMARY_CSV,
     sep = ",", row.names = FALSE,

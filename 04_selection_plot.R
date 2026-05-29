@@ -1,20 +1,24 @@
-# kpower simulation tests -- Step 4: Family selection plots
+# kpower simulation tests -- Step 4: Family selection plots (across reps)
 #
-# For each scenario, computes the fraction of B=20 bootstrap replicates
-# that selected each mixture family (regardless of K, BIC-best across
-# all surveyed families and Ks). Produces two PDFs:
+# For each (scenario, rep), reads the bootstrap-level long table from the
+# saved survey_result.rds and computes per-rep family-selection fractions
+# (which family won BIC on each bootstrap replicate). Aggregates these
+# fractions across reps to give a mean selection-rate curve with between-rep
+# error bands.
 #
+# Outputs:
 #   results/selection_K2.pdf
 #   results/selection_K4.pdf
 #
 # Each PDF is a 6-panel grid:
 #   rows    = true family (+R, +H, +T)
 #   columns = class (sep, close)
-#   per panel: x = sequence length (log), y = selection rate (0..1)
+#   per panel: x = sequence length (log), y = mean selection rate across reps
+#   ribbon  = +/- 1.96 SE across reps
 #   three lines, one per family kpower could pick (+R/+H/+T).
 #
-# The panel's own row colour is the "correct" family -- ideally rises to 1
-# with length while the others fall to 0.
+# Ideal: the line matching the panel's true family rises to 1 with length
+# while the others fall to 0.
 
 library(ggplot2)
 
@@ -24,6 +28,8 @@ SCRIPT_DIR <- tryCatch(
 )
 OUT_BASE <- file.path(SCRIPT_DIR, "results")
 
+# alignments/<scenario>/rep_NN/sim_params.txt provides true type/K/tag/length.
+# results/<scenario>/rep_NN/survey_result.rds has the bootstrap long table.
 rds_files <- list.files(OUT_BASE, pattern = "^survey_result\\.rds$",
                         recursive = TRUE, full.names = TRUE)
 if (length(rds_files) == 0)
@@ -64,18 +70,31 @@ selection_fractions <- function(surv) {
 }
 
 
-# Build long data frame across all scenarios
+# Build long data frame across all (scenario, rep) realisations -------------
 rows <- list()
 for (rds in rds_files) {
-  scenario <- basename(dirname(rds))
-  surv     <- readRDS(rds)
-  params   <- readLines(file.path(SCRIPT_DIR, "alignments", scenario,
-                                  "sim_params.txt"))
-  plist <- setNames(sub("^[^:]+:\\s*", "", params), sub(":.*", "", params))
+  rep_dir   <- dirname(rds)                            # results/<sc>/rep_NN
+  scenario  <- basename(dirname(rep_dir))
+  rep_str   <- basename(rep_dir)
+  rep_n     <- if (grepl("^rep_", rep_str))
+    as.integer(sub("^rep_", "", rep_str)) else 1L
 
-  sf <- selection_fractions(surv)
+  params_path <- file.path(SCRIPT_DIR, "alignments", scenario,
+                           rep_str, "sim_params.txt")
+  if (!file.exists(params_path)) {
+    # Pre-Stage-2 fallback: scenario-level sim_params.txt
+    params_path <- file.path(SCRIPT_DIR, "alignments", scenario,
+                             "sim_params.txt")
+    if (!file.exists(params_path)) next
+  }
+  params <- readLines(params_path)
+  plist  <- setNames(sub("^[^:]+:\\s*", "", params), sub(":.*", "", params))
+
+  surv <- readRDS(rds)
+  sf   <- selection_fractions(surv)
   if (nrow(sf) == 0) next
   sf$scenario   <- scenario
+  sf$rep        <- rep_n
   sf$true_type  <- plist[["type"]]
   sf$true_K     <- as.integer(plist[["K"]])
   sf$tag        <- plist[["tag"]]
@@ -83,10 +102,33 @@ for (rds in rds_files) {
   rows[[length(rows) + 1]] <- sf
 }
 
-d <- do.call(rbind, rows)
+per_rep <- do.call(rbind, rows)
+
+
+# Aggregate across reps: mean fraction +/- SE per (scenario, mix_type) ------
+agg <- aggregate(
+  frac ~ scenario + true_type + true_K + tag + seq_length + mix_type,
+  data = per_rep, FUN = function(x) c(
+    mean = mean(x, na.rm = TRUE),
+    sd   = if (sum(!is.na(x)) > 1) sd(x, na.rm = TRUE) else 0,
+    n    = sum(!is.na(x))
+  )
+)
+d <- data.frame(
+  agg[, !names(agg) %in% "frac"],
+  mean_frac = agg$frac[, "mean"],
+  sd_frac   = agg$frac[, "sd"],
+  n_reps    = as.integer(agg$frac[, "n"])
+)
+d$se_frac <- ifelse(d$n_reps > 1, d$sd_frac / sqrt(d$n_reps), NA_real_)
+d$ci_lo   <- pmax(0, d$mean_frac - 1.959964 * d$se_frac)
+d$ci_hi   <- pmin(1, d$mean_frac + 1.959964 * d$se_frac)
 d$true_type <- factor(d$true_type, levels = c("+R", "+H", "+T"))
 d$tag       <- factor(d$tag,       levels = c("sep", "close"))
 d$mix_type  <- factor(d$mix_type,  levels = c("+R", "+H", "+T"))
+
+n_reps_used <- max(d$n_reps, na.rm = TRUE)
+message(sprintf("Selection plots: aggregating across up to %d reps", n_reps_used))
 
 family_palette <- c("+R" = "#d6604d", "+H" = "#4393c3", "+T" = "#2ca02c")
 
@@ -101,8 +143,11 @@ base_theme <- theme_minimal(base_size = 11) +
 
 for (K in c(2, 4)) {
   sub <- d[d$true_K == K, ]
-  p <- ggplot(sub, aes(x = seq_length, y = frac,
-                       colour = mix_type, group = mix_type)) +
+  p <- ggplot(sub, aes(x = seq_length, y = mean_frac,
+                       colour = mix_type, fill = mix_type,
+                       group  = mix_type)) +
+    geom_ribbon(aes(ymin = ci_lo, ymax = ci_hi),
+                alpha = 0.18, colour = NA) +
     geom_line(linewidth = 0.7) +
     geom_point(size = 2) +
     facet_grid(true_type ~ tag,
@@ -110,9 +155,11 @@ for (K in c(2, 4)) {
                                    tag       = function(x) paste("class:", x))) +
     x_log + y_pwr +
     scale_colour_manual(values = family_palette, name = "kpower picked") +
+    scale_fill_manual(values = family_palette, guide = "none") +
     labs(x = "Sequence length (sites, log scale)",
-         y = "Fraction of bootstraps selecting this family",
-         title = sprintf("Family selection across bootstraps (K = %d)", K)) +
+         y = "Mean fraction of bootstraps selecting this family",
+         title = sprintf("Family selection across bootstraps (K = %d, mean across %d reps)",
+                         K, n_reps_used)) +
     base_theme
 
   out <- file.path(OUT_BASE, sprintf("selection_K%d.pdf", K))
