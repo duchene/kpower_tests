@@ -1,21 +1,29 @@
 # kpower simulation tests -- Step 3: Summary plots from results/summary.csv
 #
-# Aggregates across reps (Stage 2: multiple realisations per scenario).
-# For each scenario:
-#   mean_power  = mean of power_BIC across reps
-#   se_power    = standard error of the mean across reps (sd / sqrt(n_reps))
-#   ci_lo / hi  = mean +/- 1.96 * se (between-rep 95% CI; Wald)
+# Aggregates across reps. The plotted "power" is the fraction of reps in
+# which kpower's empirical fit correctly identifies BOTH the true family
+# AND the true K, computed from the `correct_family` and `correct_K`
+# columns in summary.csv. These reflect the cross-family BIC comparison
+# on the actual empirical alignment for each rep -- the apples-to-apples
+# call kpower makes when presented with one alignment.
 #
-# This is the *outer* CI -- it captures alignment-realisation variation,
-# which is the variance component the within-rep bootstrap CI cannot see.
-# The within-rep Wilson CI on B is still informative but is no longer
-# the headline -- it's now nested inside the across-rep aggregate.
+# We do NOT use `power_BIC` from summary.csv: that metric naively merges
+# bootstrap IC tables across families, but each family generates its own
+# bootstrap alignments, so comparing min(BIC) across the merged table is
+# comparing scores on different data and is systematically biased toward
+# the more flexible family. See CLAUDE.md "+H bootstrap absolute-BIC bias"
+# for the diagnosis.
+#
+# Per-scenario aggregates:
+#   mean_correct  = mean of (correct_family AND correct_K) across reps
+#   se_correct    = sqrt(p*(1-p)/n_reps)   (binomial standard error)
+#   ci_lo / hi    = Wilson 95% CI on (correct count, n_reps)
 #
 # Outputs:
 #   results/power_heatmap.pdf
-#     rows = (family, class), columns = length, fill = mean BIC power.
-#   results/power_K{2,4}_by_{family,class,combined}.pdf  (6 PDFs)
-#     line plots: x = length (log), y = mean BIC power, ribbon = +/- 1.96 SE.
+#     rows = (family, class), columns = length, fill = mean success rate.
+#   results/power_K{2,3}_by_{family,class,combined}.pdf  (6 PDFs)
+#     line plots: x = length (log), y = mean success rate, ribbon = Wilson 95% CI.
 
 library(ggplot2)
 
@@ -29,28 +37,39 @@ SUMMARY_CSV <- file.path(OUT_BASE, "summary.csv")
 if (!file.exists(SUMMARY_CSV))
   stop("No summary.csv. Run 02_run_kpower_tests.R first.")
 
+# Wilson 95% CI for a binomial proportion
+wilson_ci <- function(k, n, z = 1.959964) {
+  p <- ifelse(n > 0, k / n, NA_real_)
+  denom  <- 1 + z^2 / n
+  centre <- (p + z^2 / (2 * n)) / denom
+  half   <- z * sqrt(p * (1 - p) / n + z^2 / (4 * n^2)) / denom
+  list(lo = pmax(0, centre - half), hi = pmin(1, centre + half))
+}
+
 raw <- read.csv(SUMMARY_CSV, stringsAsFactors = FALSE)
-if (!"rep" %in% names(raw)) raw$rep <- 1L   # back-compat with pre-Stage-2 csv
+if (!"rep" %in% names(raw)) raw$rep <- 1L   # back-compat
+# Coerce in case CSV stored TRUE/FALSE as strings
+raw$correct_family <- as.logical(raw$correct_family)
+raw$correct_K      <- as.logical(raw$correct_K)
+raw$success        <- raw$correct_family & raw$correct_K
 
 # --- Aggregate across reps --------------------------------------------------
 agg <- aggregate(
-  power_BIC ~ scenario + true_type + true_K + tag + seq_length,
+  success ~ scenario + true_type + true_K + tag + seq_length,
   data = raw, FUN = function(x) c(
-    mean   = mean(x, na.rm = TRUE),
-    sd     = if (sum(!is.na(x)) > 1) sd(x, na.rm = TRUE) else 0,
-    n      = sum(!is.na(x))
+    k = sum(x, na.rm = TRUE),
+    n = sum(!is.na(x))
   )
 )
-# aggregate returns a matrix in $power_BIC; flatten
 d <- data.frame(
-  agg[, !names(agg) %in% "power_BIC"],
-  mean_power = agg$power_BIC[, "mean"],
-  sd_power   = agg$power_BIC[, "sd"],
-  n_reps     = as.integer(agg$power_BIC[, "n"])
+  agg[, !names(agg) %in% "success"],
+  k = as.integer(agg$success[, "k"]),
+  n_reps = as.integer(agg$success[, "n"])
 )
-d$se_power <- ifelse(d$n_reps > 1, d$sd_power / sqrt(d$n_reps), NA_real_)
-d$ci_lo    <- pmax(0, d$mean_power - 1.959964 * d$se_power)
-d$ci_hi    <- pmin(1, d$mean_power + 1.959964 * d$se_power)
+d$mean_success <- ifelse(d$n_reps > 0, d$k / d$n_reps, NA_real_)
+ci <- wilson_ci(d$k, d$n_reps)
+d$ci_lo <- ci$lo
+d$ci_hi <- ci$hi
 d$true_type    <- factor(d$true_type, levels = c("+R", "+H", "+T"))
 d$tag          <- factor(d$tag,       levels = c("sep", "close"))
 d$true_K       <- as.integer(d$true_K)
@@ -70,17 +89,18 @@ base_theme <- theme_minimal(base_size = 12) +
 # 1. Heatmap ----------------------------------------------------------------
 heatmap_plot <- ggplot(d, aes(x = factor(seq_length),
                               y = row_label,
-                              fill = mean_power)) +
+                              fill = mean_success)) +
   geom_tile(colour = "white") +
-  geom_text(aes(label = sprintf("%.0f%%", 100 * mean_power)),
+  geom_text(aes(label = sprintf("%.0f%%", 100 * mean_success)),
             size = 3, colour = "black") +
   facet_wrap(~ paste("K =", true_K), nrow = 1) +
   scale_fill_gradient2(low = "#fde0dd", mid = "#fa9fb5", high = "#7a0177",
                        midpoint = 0.5, limits = c(0, 1),
-                       breaks = seq(0, 1, 0.25), name = "BIC power\n(mean)") +
+                       breaks = seq(0, 1, 0.25),
+                       name = "P(correct\nfamily & K)") +
   scale_y_discrete(limits = rev) +
   labs(x = "Sequence length (sites)", y = NULL,
-       title = sprintf("Power to recover true (family, K) -- mean BIC across %d reps",
+       title = sprintf("Correct family & K recovery (mean across %d reps, BIC)",
                        n_reps_used)) +
   base_theme +
   theme(legend.position = "right",
@@ -98,7 +118,7 @@ y_pwr <- scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2))
 
 plot_one <- function(df, K, color_var, color_lab, title) {
   sub <- df[df$true_K == K, ]
-  ggplot(sub, aes(x = seq_length, y = mean_power,
+  ggplot(sub, aes(x = seq_length, y = mean_success,
                   colour = .data[[color_var]],
                   fill   = .data[[color_var]],
                   group  = interaction(true_type, tag))) +
@@ -108,7 +128,7 @@ plot_one <- function(df, K, color_var, color_lab, title) {
     geom_point(size = 2) +
     x_log + y_pwr +
     labs(x = "Sequence length (sites, log scale)",
-         y = "BIC power (mean across reps)",
+         y = "P(correct family & K)",
          colour = color_lab, fill = color_lab, title = title) +
     base_theme + theme(legend.position = "right")
 }
@@ -118,23 +138,25 @@ save_pdf <- function(p, file, w = 7, h = 5) {
   message("  ", file)
 }
 
-for (K in c(2, 4)) {
+# Loop over whatever K values are present in the data (e.g. 2, 3)
+true_K_values <- sort(unique(d$true_K))
+for (K in true_K_values) {
   message(sprintf("Line plots for K = %d", K))
   save_pdf(
     plot_one(d, K, "true_type", "Family",
-             sprintf("BIC power vs length (K = %d) -- by family", K)) +
+             sprintf("Recovery vs length (K = %d) -- by family", K)) +
       aes(linetype = tag) + labs(linetype = "Class"),
     sprintf("power_K%d_by_family.pdf", K)
   )
   save_pdf(
     plot_one(d, K, "tag", "Class",
-             sprintf("BIC power vs length (K = %d) -- by class", K)) +
+             sprintf("Recovery vs length (K = %d) -- by class", K)) +
       aes(linetype = true_type) + labs(linetype = "Family"),
     sprintf("power_K%d_by_class.pdf", K)
   )
   save_pdf(
     plot_one(d, K, "family_class", "Family x Class",
-             sprintf("BIC power vs length (K = %d) -- combined", K)),
+             sprintf("Recovery vs length (K = %d) -- combined", K)),
     sprintf("power_K%d_combined.pdf", K)
   )
 }
