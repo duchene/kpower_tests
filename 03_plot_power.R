@@ -161,4 +161,57 @@ for (K in true_K_values) {
   )
 }
 
+# 3. Per-rep line plots -----------------------------------------------------
+# One line per rep (binary 0/1 success across lengths), faceted by family x
+# class so each panel shows ~n_reps lines. Mean line overlaid in bold.
+
+# Per-rep success: binary 1/0 per (scenario, rep)
+per_rep <- raw[, c("scenario", "rep", "true_type", "true_K", "tag",
+                   "seq_length", "success")]
+per_rep$success_num <- as.integer(per_rep$success)
+per_rep$true_type   <- factor(per_rep$true_type, levels = c("+R", "+H", "+T"))
+per_rep$tag         <- factor(per_rep$tag,       levels = c("sep", "close"))
+per_rep$row_label   <- factor(
+  paste0(per_rep$true_type, " ", per_rep$tag),
+  levels = c("+R sep", "+R close", "+H sep", "+H close", "+T sep", "+T close")
+)
+# matching mean rows (built earlier as `d`)
+d$row_label <- factor(d$row_label, levels = levels(per_rep$row_label))
+
+family_palette <- c("+R" = "#d6604d", "+H" = "#4393c3", "+T" = "#2ca02c")
+
+per_rep_panel <- function(K) {
+  pr <- per_rep[per_rep$true_K == K, ]
+  mn <- d[d$true_K == K, ]
+  ggplot() +
+    geom_line(data = pr,
+              aes(x = seq_length, y = success_num,
+                  group = rep, colour = true_type),
+              alpha = 0.30, linewidth = 0.4) +
+    geom_line(data = mn,
+              aes(x = seq_length, y = mean_success, colour = true_type),
+              linewidth = 1.2) +
+    geom_point(data = mn,
+               aes(x = seq_length, y = mean_success, colour = true_type),
+               size = 2) +
+    facet_wrap(~ row_label, ncol = 2,
+               labeller = labeller(row_label = function(x) x)) +
+    scale_colour_manual(values = family_palette, guide = "none") +
+    x_log +
+    scale_y_continuous(limits = c(-0.05, 1.05),
+                       breaks = c(0, 0.25, 0.5, 0.75, 1)) +
+    labs(x = "Sequence length (sites, log scale)",
+         y = "Success (per rep: 0 or 1; bold = mean)",
+         title = sprintf("Per-rep recovery across length (K = %d, n=%d reps)",
+                         K, n_reps_used)) +
+    base_theme +
+    theme(strip.text = element_text(face = "bold"))
+}
+
+for (K in true_K_values) {
+  save_pdf(per_rep_panel(K),
+           sprintf("power_K%d_per_rep.pdf", K),
+           w = 8, h = 7)
+}
+
 message("\nDone.")
