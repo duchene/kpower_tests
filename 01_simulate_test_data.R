@@ -1,10 +1,10 @@
 # kpower simulation tests -- Step 1: Simulate all test alignments
 #
-# Design (48 scenarios x N_REPS realisations = 48 * N_REPS sim runs):
+# Design (60 scenarios x N_REPS realisations = 60 * N_REPS sim runs):
 #   - 3 families:       +R, +H, +T
 #   - 2 class types:    "sep" (well-separated), "close" (subtle)
 #   - 2 K values:       2, 3
-#   - 4 seq lengths:    100, 300, 1000, 3000 (log-spaced)
+#   - 5 seq lengths:    100, 300, 1000, 3000, 6000 (log-spaced)
 #   - 20 taxa, shared random tree (mean RTT = 0.45 subs/site)
 #   - N_REPS independent realisations per scenario (Stage 2 outer-loop)
 #
@@ -42,7 +42,7 @@ IQTREE  <- Sys.which("iqtree2")
 #  IQTREE <- path.expand("~/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3")
 
 N_TAXA          <- 20
-LENGTHS         <- c(100, 300, 1000, 3000)
+LENGTHS         <- c(100, 300, 1000, 3000, 6000)
 TARGET_MEAN_RTT <- 0.45            # mean root-to-tip subs/site (Duchene 2017)
 KS              <- c(2, 3)
 N_REPS          <- 10              # independent realisations per scenario
