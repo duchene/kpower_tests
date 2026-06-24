@@ -80,8 +80,8 @@ message(sprintf("Selection plots: aggregating across up to %d reps", n_reps_used
 
 family_palette <- c("+R" = "#d6604d", "+H" = "#4393c3", "+T" = "#2ca02c")
 
-x_log <- scale_x_log10(breaks = c(100, 300, 1000, 3000, 10000),
-                       labels = c("100", "300", "1k", "3k", "10k"))
+x_log <- scale_x_log10(breaks = c(100, 300, 1000, 3000, 6000),
+                       labels = c("100", "300", "1k", "3k", "6k"))
 y_pwr <- scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25))
 
 base_theme <- theme_minimal(base_size = 11) +
