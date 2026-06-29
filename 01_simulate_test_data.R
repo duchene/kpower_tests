@@ -12,8 +12,8 @@
 # identically to K=2 and K=4:
 #   +R: rates are a geometric series from 1/s to s, equal proportions,
 #       rescaled so weighted mean rate = 1 (preserves overall tree length)
-#       sep   -> s = 5     (25x fast/slow ratio)
-#       close -> s = 2.5   (~6x ratio)
+#       sep   -> s = 4     (16x fast/slow ratio)
+#       close -> s = 1.8   (~3.2x ratio)
 #   +H: each class has independently-perturbed branch lengths via lognormal
 #       deviates with sd = log_sd, then rescaled to preserve base TL
 #       (see heterotachy_tree() and CLAUDE.md)
@@ -56,7 +56,7 @@ dir.create(OUT_BASE, showWarnings = FALSE, recursive = TRUE)
 
 # Spread parameters per class type (identical across K within a family)
 SPREAD <- list(
-  R = list(sep = 5.0,  close = 2.5),    # geometric spread for rates
+  R = list(sep = 4.0,  close = 1.8),    # geometric spread for rates
   H = list(sep = 2.0,  close = 0.9),    # log_sd for branch perturbation
   T = list(sep = 15L,  close = 7L)      # NNI moves between class trees
 )
