@@ -15,11 +15,12 @@ library(kpower)
 library(ggplot2)
 
 # --- Configuration ----------------------------------------------------------
-# 48 scenarios x N_REPS realisations. With B=50, N_REPS=10, K_MAX=5,
-# expect ~7-8 days of runtime. Resumable; safe to stop.
+# 60 scenarios x N_REPS realisations. The B=50, N_REPS=10, K_MAX=5 run took
+# ~37 CPU-days (L=6000 alone was 26 of those). Resumable; safe to stop.
 K_MAX      <- 5        # evaluate K = 1..K_MAX
-B          <- 50       # bootstrap replicates per family
-N_CORES    <- 10       # parallel R workers (bootstrap refits)
+B          <- 100      # bootstrap replicates per family
+MAX_LENGTH <- 3000     # skip scenarios longer than this (Inf = run all)
+N_CORES    <- 7        # parallel R workers (bootstrap refits); shared box
 THREADS    <- 2        # IQ-TREE threads per run
 FIXED_TREE <- NULL     # NULL = --fast heuristic (IQ-TREE 3.0.1 ARM BioNJ bug)
 FAST_TREES <- TRUE     # GTR+R --fast for MAST candidate trees (skip MFP)
@@ -100,6 +101,17 @@ if (length(rep_dirs) == 0)
 # before any at rep 2).
 scenario  <- basename(dirname(rep_dirs))
 rep       <- as.integer(sub("^rep_", "", basename(rep_dirs)))
+
+# Length cap: scenario names end in _L<length>
+if (is.finite(MAX_LENGTH)) {
+  scen_len <- as.integer(sub("^.*_L", "", scenario))
+  keep     <- is.na(scen_len) | scen_len <= MAX_LENGTH
+  if (any(!keep))
+    message(sprintf("Skipping %d rep dirs with L > %d.",
+                    sum(!keep), MAX_LENGTH))
+  rep_dirs <- rep_dirs[keep]; scenario <- scenario[keep]; rep <- rep[keep]
+}
+
 idx       <- order(rep, scenario)
 rep_dirs  <- rep_dirs[idx]
 scenario  <- scenario[idx]
@@ -200,6 +212,7 @@ for (i in seq_along(todo_dirs)) {
     true_K         = true_K,
     tag            = tag,
     seq_length     = len,
+    B              = B,
     best_mix_type  = best$mix_type,
     best_K         = best$K,
     best_BIC       = round(best$ic_value, 1),
@@ -219,6 +232,30 @@ for (i in seq_along(todo_dirs)) {
     row[[paste0(mt_safe, "_K")]]   <- if (nrow(cr) == 1) cr$K_best else NA
     row[[paste0(mt_safe, "_BIC")]] <- if (nrow(cr) == 1) round(cr$BIC, 1)
                                       else NA
+    # Candidate-tree filter (kpower >= filter_candidate_trees): the K ceiling
+    # this family actually fitted, and whether K_best landed on it. A
+    # ceiling-limited row is scored normally but reads as "at least K_best".
+    row[[paste0(mt_safe, "_Kmaxeff")]] <-
+      if (nrow(cr) == 1 && !is.null(cr$K_max_effective)) cr$K_max_effective
+      else NA_integer_
+    row[[paste0(mt_safe, "_ceiling")]] <-
+      if (nrow(cr) == 1 && !is.null(cr$ceiling_limited)) cr$ceiling_limited
+      else NA
+  }
+
+  # Replicate-side filter rate: how far the filter cut the bootstrap
+  # replicates back, and how often that alone put K_best out of reach. No
+  # floor is applied, so a below-K_best replicate is scored a miss.
+  tfam <- surv$families[["+T"]]
+  if (!is.null(tfam) && !is.null(tfam$sim_ic) &&
+      !is.null(tfam$sim_ic$K_max_effective)) {
+    reps <- unique(tfam$sim_ic[, c("replicate", "K_max_effective",
+                                   "n_dropped", "below_K_best")])
+    row$T_rep_dropped  <- round(mean(as.numeric(reps$n_dropped)), 3)
+    row$T_rep_below_Kb <- round(mean(as.logical(reps$below_K_best)), 3)
+  } else {
+    row$T_rep_dropped  <- NA_real_
+    row$T_rep_below_Kb <- NA_real_
   }
 
   message(sprintf("  best=%s K=%d | gt-power AIC=%.2f AICc=%.2f BIC=%.2f%s",
@@ -227,6 +264,16 @@ for (i in seq_along(todo_dirs)) {
                   if (!is.null(surv$elapsed))
                     sprintf("  | elapsed %.0fs", surv$elapsed) else ""))
 
+  # write.table(append = TRUE) does not check the header, so appending a row
+  # with a different column set would silently misalign every later column.
+  if (file.exists(SUMMARY_CSV)) {
+    have <- names(read.csv(SUMMARY_CSV, nrows = 1, check.names = FALSE))
+    if (!identical(have, names(row)))
+      stop("Column mismatch with existing ", SUMMARY_CSV,
+           ".\n  on disk: ", paste(have, collapse = ", "),
+           "\n  new row: ", paste(names(row), collapse = ", "),
+           "\nWrite this job to a fresh OUT_BASE and merge afterwards.")
+  }
   write.table(
     row, SUMMARY_CSV,
     sep = ",", row.names = FALSE,
