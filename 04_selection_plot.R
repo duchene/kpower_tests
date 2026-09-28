@@ -78,7 +78,9 @@ d$picked    <- factor(d$picked,    levels = c("+R", "+H", "+T"))
 n_reps_used <- max(d$n_reps, na.rm = TRUE)
 message(sprintf("Selection plots: aggregating across up to %d reps", n_reps_used))
 
-family_palette <- c("+R" = "#d6604d", "+H" = "#4393c3", "+T" = "#2ca02c")
+# Colourblind-safe, viridis-derived family colours (distinct in luminance too,
+# so they survive greyscale printing). Avoids the red/green pairing.
+family_palette <- c("+R" = "#440154", "+H" = "#21918C", "+T" = "#7AD151")
 
 x_log <- scale_x_log10(breaks = c(100, 300, 1000, 3000, 6000),
                        labels = c("100", "300", "1k", "3k", "6k"))
@@ -93,13 +95,17 @@ base_theme <- theme_minimal(base_size = 11) +
 true_K_values <- sort(unique(d$true_K))
 for (K in true_K_values) {
   sub <- d[d$true_K == K, ]
+  # Small horizontal dodge + slim error bars instead of three stacked, muddy
+  # translucent ribbons (which grey each other out where the families overlap).
+  pd <- position_dodge(width = 0.06)
   p <- ggplot(sub, aes(x = seq_length, y = frac,
                        colour = picked, fill = picked,
                        group  = picked)) +
-    geom_ribbon(aes(ymin = ci_lo, ymax = ci_hi),
-                alpha = 0.18, colour = NA) +
-    geom_line(linewidth = 0.7) +
-    geom_point(size = 2) +
+    geom_errorbar(aes(ymin = ci_lo, ymax = ci_hi),
+                  width = 0.05, linewidth = 0.4, alpha = 0.7,
+                  position = pd) +
+    geom_line(linewidth = 0.7, position = pd) +
+    geom_point(size = 1.9, position = pd) +
     facet_grid(true_type ~ tag,
                labeller = labeller(true_type = function(x) paste("true:", x),
                                    tag       = function(x) paste("class:", x))) +

@@ -87,27 +87,58 @@ base_theme <- theme_minimal(base_size = 12) +
 
 
 # 1. Heatmap ----------------------------------------------------------------
-heatmap_plot <- ggplot(d, aes(x = factor(seq_length),
-                              y = row_label,
-                              fill = mean_success)) +
+# Split into two diagnostics so it's clear WHERE power is lost:
+#   (a) Correct family      = P(picks the true family)
+#   (b) Correct K | family  = P(picks true K | it already picked the true family)
+# A merged "family AND K" cell hides whether a failure was a wrong-family call
+# or a right-family/wrong-K call -- very different diagnoses.
+hcount <- aggregate(
+  cbind(n    = 1L,
+        fam  = as.integer(raw$correct_family),
+        famK = as.integer(raw$correct_family & raw$correct_K)) ~
+    scenario + true_type + true_K + tag + seq_length,
+  data = raw, FUN = sum, na.rm = TRUE)
+
+mk_row_label <- function(tt, tg) factor(
+  paste0(tt, " ", tg),
+  levels = c("+R sep", "+R close", "+H sep", "+H close", "+T sep", "+T close"))
+
+hm <- rbind(
+  data.frame(hcount[c("true_type", "true_K", "tag", "seq_length")],
+             metric = "Correct family",
+             value  = hcount$fam / hcount$n),
+  data.frame(hcount[c("true_type", "true_K", "tag", "seq_length")],
+             metric = "Correct K | family",
+             value  = ifelse(hcount$fam > 0, hcount$famK / hcount$fam, NA_real_))
+)
+hm$metric    <- factor(hm$metric,
+                       levels = c("Correct family", "Correct K | family"))
+hm$row_label <- mk_row_label(hm$true_type, hm$tag)
+# Identity text colour: readable on dark/bright cells; grey dash for "n/a"
+# (family never recovered, so K is undefined).
+hm$txt <- ifelse(is.na(hm$value), "grey35",
+                 ifelse(hm$value > 0.55, "grey10", "white"))
+hm$lab <- ifelse(is.na(hm$value), "–", sprintf("%.0f%%", 100 * hm$value))
+
+heatmap_plot <- ggplot(hm, aes(x = factor(seq_length),
+                               y = row_label, fill = value)) +
   geom_tile(colour = "white") +
-  geom_text(aes(label = sprintf("%.0f%%", 100 * mean_success)),
-            size = 3, colour = "black") +
-  facet_wrap(~ paste("K =", true_K), nrow = 1) +
-  scale_fill_gradient2(low = "#fde0dd", mid = "#fa9fb5", high = "#7a0177",
-                       midpoint = 0.5, limits = c(0, 1),
-                       breaks = seq(0, 1, 0.25),
-                       name = "P(correct\nfamily & K)") +
+  geom_text(aes(label = lab, colour = txt), size = 2.8, show.legend = FALSE) +
+  facet_grid(metric ~ paste("K =", true_K)) +
+  scale_fill_viridis_c(limits = c(0, 1), breaks = seq(0, 1, 0.25),
+                       labels = function(x) sprintf("%.0f%%", 100 * x),
+                       name = "P", na.value = "grey90") +
+  scale_colour_identity() +
   scale_y_discrete(limits = rev) +
   labs(x = "Sequence length (sites)", y = NULL,
-       title = sprintf("Correct family & K recovery (mean across %d reps, BIC)",
+       title = sprintf("Where recovery succeeds and fails (mean across %d reps, BIC)",
                        n_reps_used)) +
   base_theme +
   theme(legend.position = "right",
         strip.text = element_text(face = "bold"))
 
 ggsave(file.path(OUT_BASE, "power_heatmap.pdf"),
-       heatmap_plot, width = 9, height = 4)
+       heatmap_plot, width = 9, height = 7)
 message("Heatmap -> power_heatmap.pdf")
 
 
@@ -123,9 +154,11 @@ plot_one <- function(df, K, color_var, color_lab, title) {
                   fill   = .data[[color_var]],
                   group  = interaction(true_type, tag))) +
     geom_ribbon(aes(ymin = ci_lo, ymax = ci_hi),
-                alpha = 0.18, colour = NA) +
+                alpha = 0.12, colour = NA) +
     geom_line(linewidth = 0.7) +
     geom_point(size = 2) +
+    scale_colour_viridis_d(end = 0.9) +
+    scale_fill_viridis_d(end = 0.9) +
     x_log + y_pwr +
     labs(x = "Sequence length (sites, log scale)",
          y = "P(correct family & K)",
@@ -142,22 +175,14 @@ save_pdf <- function(p, file, w = 7, h = 5) {
 true_K_values <- sort(unique(d$true_K))
 for (K in true_K_values) {
   message(sprintf("Line plots for K = %d", K))
+  # Single consolidated power curve per K: all families (colour) x signal
+  # (linetype). The former by_class / combined variants were redundant
+  # re-encodings of this same quantity and have been dropped.
   save_pdf(
     plot_one(d, K, "true_type", "Family",
-             sprintf("Recovery vs length (K = %d) -- by family", K)) +
+             sprintf("Recovery vs length (K = %d)", K)) +
       aes(linetype = tag) + labs(linetype = "Class"),
     sprintf("power_K%d_by_family.pdf", K)
-  )
-  save_pdf(
-    plot_one(d, K, "tag", "Class",
-             sprintf("Recovery vs length (K = %d) -- by class", K)) +
-      aes(linetype = true_type) + labs(linetype = "Family"),
-    sprintf("power_K%d_by_class.pdf", K)
-  )
-  save_pdf(
-    plot_one(d, K, "family_class", "Family x Class",
-             sprintf("Recovery vs length (K = %d) -- combined", K)),
-    sprintf("power_K%d_combined.pdf", K)
   )
 }
 
@@ -178,7 +203,9 @@ per_rep$row_label   <- factor(
 # matching mean rows (built earlier as `d`)
 d$row_label <- factor(d$row_label, levels = levels(per_rep$row_label))
 
-family_palette <- c("+R" = "#d6604d", "+H" = "#4393c3", "+T" = "#2ca02c")
+# Colourblind-safe, viridis-derived family colours (distinct in luminance too,
+# so they survive greyscale printing). Avoids the red/green pairing.
+family_palette <- c("+R" = "#440154", "+H" = "#21918C", "+T" = "#7AD151")
 
 per_rep_panel <- function(K) {
   pr <- per_rep[per_rep$true_K == K, ]
