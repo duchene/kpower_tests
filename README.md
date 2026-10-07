@@ -6,6 +6,10 @@ the statistical power of mixture-model selection in phylogenetics.
 
 ## Overview
 
+This repository holds two complementary analyses:
+
+### 1. Simulation-based validation (TESTS_BRIEF.md, scripts 01–02)
+
 These tests simulate sequence alignments under known mixture models
 (FreeRate +R, GHOST +H, MAST +T) with controlled parameters, then run
 `kpower_survey()` to check whether the correct model family and number
@@ -21,6 +25,22 @@ The test suite is designed to:
    separation, and topological divergence affect detection?
 4. **Catch regressions** -- confirm that bug fixes in kpower's MAST
    bootstrap pipeline remain functional.
+
+### 2. Empirical analysis on real filovirus genomes (FILOVIRUS_ANALYSIS.md, scripts 03–04)
+
+Real-world application of kpower to NCBI filovirus genomic data. Demonstrates
+the power assessment framework on two genera-restricted alignments, addressing
+the key finding: **BIC selected a model family, but the data lack the signal to
+reliably recover that choice** (Susko et al. 2023 applies here). Results include:
+
+- **Ebola (27 taxa):** FreeRate K=3 wins; BIC recovers it 95% of the time; GHOST
+  K=3 only 53%. Power asymmetry for heterotachy-like signals.
+- **Marburg (16 taxa):** MAST K=3 wins; BIC's margin over FreeRate K=3 is only 5.0
+  units; FreeRate power is 1% (data lack the signal). Canonical example of weak
+  signal despite model selection.
+
+See [FILOVIRUS_ANALYSIS.md](FILOVIRUS_ANALYSIS.md) for full results, caveats, and
+how to reproduce the analysis.
 
 ## Quick start
 
@@ -99,25 +119,51 @@ empirical fits (Phase 1) and all +R/+H results were unaffected.
 
 ```
 kpower_tests/
-  README.md                     # This file
-  TESTS_BRIEF.md                # Detailed design, results, and discussion
-  01_simulate_test_data.R       # Simulate all +R, +H, +T alignments
-  02_run_kpower_tests.R         # Run kpower_survey on each, write summary
-  alignments/                   # Simulated data (not tracked in git)
+  README.md                                 # This file
+  TESTS_BRIEF.md                            # Simulation-based validation details
+  FILOVIRUS_ANALYSIS.md                     # Empirical analysis details
+  
+  ## Simulation-based validation (01–02)
+  01_simulate_test_data.R                   # Simulate all +R, +H, +T alignments
+  02_run_kpower_tests.R                     # Run kpower_survey on each, write summary
+  
+  ## Empirical filovirus analysis (03–04)
+  03_filovirus_prep_alignment.R             # Download, filter, and align filoviruses
+  03b_filovirus_gblocks_filter.R            # Remove gappy regions with Gblocks
+  04_filovirus_kpower_survey.R              # Run kpower_survey (B=100) on each genus
+  
+  alignments/                               # Alignment data (not tracked in git)
     test_tree.nwk
-    <scenario>/sim.phy
-  results/                      # Survey output (not tracked in git)
-    summary.csv
-    <scenario>/survey_result.rds
+    <scenario>/sim.phy                      # Test suite alignments
+    filovirus/
+      ncbi_virus_filoviridae.fasta          # Input NCBI data (16 MB)
+      ebola_*.fasta                         # Intermediate steps
+      marburg_*.fasta
+  
+  results/                                  # Survey output (not tracked in git)
+    summary.csv                             # Test suite summary
+    <scenario>/survey_result.rds            # Test suite results
+    filovirus/
+      survey_summary.txt                    # Human-readable summary
+      bic_profiles.csv                      # All empirical IC scores
+      family_comparison.csv                 # K_best + power table
+      bic_support.pdf                       # Cross-family BIC profile plot
+      *_ic_profile_*.pdf                    # Per-family bootstrap figures
+      *_survey.rds                          # Full kpower_survey results
+      *_B100_K*.rds                         # Per-family checkpoints
 ```
 
 ## References
 
-- Duchene, D.A., Duchene, S., & Ho, S.Y.W. (2017). New Statistical
-  Criteria Detect Phylogenetic Bias Caused by Compositional
-  Heterogeneity. *Systematic Biology*, 66(5), 769-785.
 - Crotty, S.M., et al. (2020). GHOST: Recovering Historical Signal
   from Heterotachously Evolved Sequence Alignments. *Systematic
   Biology*, 69(2), 249-264.
+- Duchene, D.A., Duchene, S., & Ho, S.Y.W. (2017). New Statistical
+  Criteria Detect Phylogenetic Bias Caused by Compositional
+  Heterogeneity. *Systematic Biology*, 66(5), 769-785.
+- Susko, E., Leigh, J.W., & Doron-Faigenboim, A. (2023). Comparing
+  the fit of complex models of sequence evolution: Cross-validation
+  and the discrete Kolmogorov-Smirnov test. *Molecular Biology and
+  Evolution*, 40(1), msac239.
 - Woodhams, M.D., et al. (2024). MAST: Mixture Across Sites and Trees.
   *Systematic Biology*, 73(2), 375-391.
