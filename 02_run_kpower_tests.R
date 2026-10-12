@@ -20,8 +20,8 @@ library(ggplot2)
 K_MAX      <- 5        # evaluate K = 1..K_MAX
 B          <- 100      # bootstrap replicates per family
 MAX_LENGTH <- 3000     # skip scenarios longer than this (Inf = run all)
-N_CORES    <- 7        # parallel R workers (bootstrap refits); shared box
-THREADS    <- 2        # IQ-TREE threads per run
+N_CORES    <- 16       # parallel R workers (bootstrap refits); shared box
+THREADS    <- 1        # IQ-TREE threads per run
 FIXED_TREE <- NULL     # NULL = --fast heuristic (IQ-TREE 3.0.1 ARM BioNJ bug)
 FAST_TREES <- TRUE     # GTR+R --fast for MAST candidate trees (skip MFP)
 MIX_TYPES  <- c("+R", "+H", "+T")

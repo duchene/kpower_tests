@@ -21,9 +21,14 @@
 #
 # Outputs:
 #   results/power_heatmap.pdf
-#     rows = (family, class), columns = length, fill = mean success rate.
-#   results/power_K{2,3}_by_{family,class,combined}.pdf  (6 PDFs)
-#     line plots: x = length (log), y = mean success rate, ribbon = Wilson 95% CI.
+#     rows = (family, class), columns = length, fill = mean success rate;
+#     one panel per K, stacked vertically, with a vertical colourbar at right.
+#   results/power_K{2,3}_by_{family,class,combined}
+#     line plots: x = length (log), y = mean success rate, shaded band =
+#     Wilson 95% CI (drawn on the combined and per-rep panels only).
+#
+# Every figure is written as .pdf, .svg and .png -- see save_fig() in
+# 00_plot_theme.R.
 
 library(ggplot2)
 
@@ -31,8 +36,16 @@ SCRIPT_DIR <- tryCatch(
   dirname(normalizePath(sys.frame(1)$ofile, mustWork = FALSE)),
   error = function(e) getwd()
 )
-OUT_BASE    <- file.path(SCRIPT_DIR, "results")
+# Results directory: defaults to results/. Set KPOWER_RESULTS_DIR (absolute, or
+# relative to this script) to plot an archived run, e.g. results_B50.
+OUT_BASE    <- local({
+  o <- Sys.getenv("KPOWER_RESULTS_DIR", "results")
+  if (startsWith(o, "/")) o else file.path(SCRIPT_DIR, o)
+})
 SUMMARY_CSV <- file.path(OUT_BASE, "summary.csv")
+
+# Shared publication theme, palettes and save helpers.
+source(file.path(SCRIPT_DIR, "00_plot_theme.R"))
 
 if (!file.exists(SUMMARY_CSV))
   stop("No summary.csv. Run 02_run_kpower_tests.R first.")
@@ -52,6 +65,94 @@ if (!"rep" %in% names(raw)) raw$rep <- 1L   # back-compat
 raw$correct_family <- as.logical(raw$correct_family)
 raw$correct_K      <- as.logical(raw$correct_K)
 raw$success        <- raw$correct_family & raw$correct_K
+
+# --- Cross-family recovery under each IC (AIC / AICc / BIC) -----------------
+# summary.csv only records the honest empirical "correct family & K" call under
+# BIC (best_mix_type / best_K). To draw the same honest call under AIC and AICc
+# we recompute it from each rep's survey_result.rds: per family take the K that
+# minimises the IC on the *empirical* alignment, then pick the family with the
+# lowest such IC (all families scored on the SAME empirical data -- apples to
+# apples, unlike the biased merged-bootstrap power_AIC/power_AICc columns).
+# Result is cached to results/correct_by_ic.csv; set REBUILD_CORRECT_BY_IC=1 to
+# force a rescan.
+CBI_CSV   <- file.path(OUT_BASE, "correct_by_ic.csv")
+IC_LEVELS <- c("AIC", "AICc", "BIC")
+
+correct_from_survey <- function(rds_path, true_type, true_K) {
+  s <- tryCatch(readRDS(rds_path), error = function(e) NULL)
+  if (is.null(s) || is.null(s$families)) return(NULL)
+  do.call(rbind, lapply(IC_LEVELS, function(ic) {
+    # best (K, IC value) per family on the empirical alignment
+    per_fam <- lapply(s$families, function(f) {
+      emp <- f$empirical
+      if (is.null(emp) || !ic %in% names(emp) || !nrow(emp)) return(NULL)
+      i <- which.min(emp[[ic]])
+      data.frame(fam = f$mix_type, bestK = emp$K[i], val = emp[[ic]][i])
+    })
+    per_fam <- do.call(rbind, per_fam[!vapply(per_fam, is.null, logical(1))])
+    if (is.null(per_fam) || !nrow(per_fam)) return(NULL)
+    win <- per_fam[which.min(per_fam$val), ]
+    data.frame(ic = ic,
+               correct_family = win$fam == true_type,
+               correct_K      = win$bestK == true_K)
+  }))
+}
+
+if (file.exists(CBI_CSV) && Sys.getenv("REBUILD_CORRECT_BY_IC") != "1") {
+  cbi <- read.csv(CBI_CSV, stringsAsFactors = FALSE)
+  message("Loaded cached correct_by_ic.csv (", nrow(cbi), " rows)")
+} else {
+  message("Scanning survey_result.rds files for AIC/AICc/BIC recovery ...")
+  meta <- unique(raw[, c("scenario", "rep", "true_type", "true_K",
+                         "tag", "seq_length")])
+  rows <- vector("list", nrow(meta))
+  for (i in seq_len(nrow(meta))) {
+    m   <- meta[i, ]
+    rds <- file.path(OUT_BASE, m$scenario,
+                     sprintf("rep_%02d", m$rep), "survey_result.rds")
+    if (!file.exists(rds)) next
+    r <- correct_from_survey(rds, m$true_type, m$true_K)
+    if (is.null(r)) next
+    rows[[i]] <- data.frame(
+      scenario = m$scenario, rep = m$rep, true_type = m$true_type,
+      true_K = m$true_K, tag = m$tag, seq_length = m$seq_length, r,
+      row.names = NULL)
+  }
+  cbi <- do.call(rbind, rows[!vapply(rows, is.null, logical(1))])
+  if (is.null(cbi) || !nrow(cbi))
+    stop("No survey_result.rds files found under ", OUT_BASE)
+  cbi$success <- cbi$correct_family & cbi$correct_K
+  write.csv(cbi, CBI_CSV, row.names = FALSE)
+  message("Wrote ", basename(CBI_CSV), " (", nrow(cbi), " rows)")
+
+  # Sanity check: BIC recovery from RDS should match summary.csv's columns.
+  chk <- merge(
+    cbi[cbi$ic == "BIC", c("scenario", "rep", "success")],
+    data.frame(scenario = raw$scenario, rep = raw$rep,
+               success_csv = raw$success),
+    by = c("scenario", "rep"))
+  mism <- sum(chk$success != chk$success_csv, na.rm = TRUE)
+  if (mism > 0)
+    message(sprintf("  NOTE: %d/%d BIC calls differ from summary.csv",
+                    mism, nrow(chk)))
+}
+cbi$success <- cbi$correct_family & cbi$correct_K
+
+# Reps run elsewhere may arrive as summary.csv rows only (no survey_result.rds,
+# e.g. the L6000 server run). Their BIC call is in summary.csv, so fall back to
+# it; AIC/AICc can't be recovered without the RDS and stay missing.
+no_rds <- !(paste(raw$scenario, raw$rep) %in%
+            paste(cbi$scenario[cbi$ic == "BIC"], cbi$rep[cbi$ic == "BIC"]))
+if (any(no_rds)) {
+  message(sprintf("  %d rep(s) without survey_result.rds: BIC call taken ",
+                  sum(no_rds)), "from summary.csv, AIC/AICc left missing")
+  cbi <- rbind(cbi, data.frame(
+    raw[no_rds, c("scenario", "rep", "true_type", "true_K", "tag",
+                  "seq_length")],
+    ic = "BIC", correct_family = raw$correct_family[no_rds],
+    correct_K = raw$correct_K[no_rds], success = raw$success[no_rds],
+    row.names = NULL))
+}
 
 # --- Aggregate across reps --------------------------------------------------
 agg <- aggregate(
@@ -82,83 +183,141 @@ d$row_label    <- factor(
 n_reps_used <- max(d$n_reps, na.rm = TRUE)
 message(sprintf("Aggregating across up to %d reps per scenario", n_reps_used))
 
-base_theme <- theme_minimal(base_size = 12) +
-  theme(panel.grid.minor = element_blank())
+# 1. Heatmaps (one per IC) --------------------------------------------------
+# Aggregate a per-(scenario, rep) success frame into per-scenario means with
+# the same row_label / true_K structure used above.
+agg_success <- function(df) {
+  a <- aggregate(
+    success ~ scenario + true_type + true_K + tag + seq_length,
+    data = df, FUN = function(x) c(k = sum(x, na.rm = TRUE),
+                                   n = sum(!is.na(x))))
+  out <- data.frame(a[, !names(a) %in% "success"],
+                    k = as.integer(a$success[, "k"]),
+                    n_reps = as.integer(a$success[, "n"]))
+  out$mean_success <- ifelse(out$n_reps > 0, out$k / out$n_reps, NA_real_)
+  out$true_type <- factor(out$true_type, levels = c("+R", "+H", "+T"))
+  out$tag       <- factor(out$tag,       levels = c("sep", "close"))
+  out$true_K    <- as.integer(out$true_K)
+  out$row_label <- factor(
+    paste0(out$true_type, " ", out$tag),
+    levels = c("+R sep", "+R close", "+H sep", "+H close", "+T sep", "+T close"))
+  out
+}
 
+heatmap_for_ic <- function(ic) {
+  hd <- agg_success(cbi[cbi$ic == ic, ])
+  n_used <- max(hd$n_reps, na.rm = TRUE)
+  # Recovery rate is a magnitude on [0, 1] with no meaningful midpoint, so it
+  # takes a single-hue sequential ramp (SEQ_COLOURS) -- not a diverging one,
+  # which would imply a polarity at 0.5 that the quantity does not have. Tile
+  # labels take their ink from the same vector, so they flip to white once the
+  # fill is dark enough that near-black text would fail contrast.
+  hd$label_ink <- label_ink_for_fill(hd$mean_success)
+  p <- ggplot(hd, aes(x = factor(seq_length), y = row_label,
+                      fill = mean_success)) +
+    geom_tile(colour = "white", linewidth = 0.6) +
+    geom_text(aes(label = sprintf("%.0f", 100 * mean_success),
+                  colour = I(label_ink)), size = 2.4) +
+    facet_wrap(~ paste("K =", true_K), ncol = 1) +
+    scale_fill_gradientn(colours = SEQ_COLOURS,
+                         limits = c(0, 1), breaks = seq(0, 1, 0.25),
+                         labels = label_percent(accuracy = 1),
+                         name = "Correct family & K") +
+    scale_y_discrete(limits = rev) +
+    guides(fill = guide_colourbar(title.position = "top", barwidth = 0.4,
+                                  barheight = 8, ticks.colour = NA)) +
+    fig_labs(x = "Sequence length (sites)", y = NULL,
+             title = sprintf("Correct family & K recovery (%s, %d reps)",
+                             ic, n_used)) +
+    theme_kpower(grid = "none") +
+    theme(axis.ticks = element_blank(),
+          legend.position  = "right",
+          legend.direction = "vertical",
+          legend.key.width = unit(8, "pt"))
+  save_fig(p, file.path(OUT_BASE, sprintf("power_heatmap_%s.pdf", ic)),
+           width = "single", height = 6.0)
+  if (ic == "BIC")                         # keep back-compat filename
+    save_fig(p, file.path(OUT_BASE, "power_heatmap.pdf"),
+             width = "single", height = 6.0)
+}
 
-# 1. Heatmap ----------------------------------------------------------------
-heatmap_plot <- ggplot(d, aes(x = factor(seq_length),
-                              y = row_label,
-                              fill = mean_success)) +
-  geom_tile(colour = "white") +
-  geom_text(aes(label = sprintf("%.0f%%", 100 * mean_success)),
-            size = 3, colour = "black") +
-  facet_wrap(~ paste("K =", true_K), nrow = 1) +
-  scale_fill_gradient2(low = "#fde0dd", mid = "#fa9fb5", high = "#7a0177",
-                       midpoint = 0.5, limits = c(0, 1),
-                       breaks = seq(0, 1, 0.25),
-                       name = "P(correct\nfamily & K)") +
-  scale_y_discrete(limits = rev) +
-  labs(x = "Sequence length (sites)", y = NULL,
-       title = sprintf("Correct family & K recovery (mean across %d reps, BIC)",
-                       n_reps_used)) +
-  base_theme +
-  theme(legend.position = "right",
-        strip.text = element_text(face = "bold"))
-
-ggsave(file.path(OUT_BASE, "power_heatmap.pdf"),
-       heatmap_plot, width = 9, height = 4)
-message("Heatmap -> power_heatmap.pdf")
+for (ic in IC_LEVELS) heatmap_for_ic(ic)
 
 
 # 2. Line plots -------------------------------------------------------------
-x_log <- scale_x_log10(breaks = c(100, 300, 1000, 3000, 6000),
-                       labels = c("100", "300", "1k", "3k", "6k"))
-y_pwr <- scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.2))
+# Every series carries two encodings (hue + dash, or hue + panel) so identity
+# survives greyscale printing and colour-vision deficiency.
+Y_LAB <- "Correct family & K"
 
-plot_one <- function(df, K, color_var, color_lab, title) {
-  sub <- df[df$true_K == K, ]
+# Six series in one panel: confidence bands are omitted here because six
+# translucent ribbons overlap into colours that map to no series. The CIs are
+# shown in the faceted "combined" and per-replicate figures, where each panel
+# carries few enough series to draw them honestly.
+power_lines <- function(sub, colour_var, linetype_var, palette,
+                        colour_lab, linetype_lab,
+                        linetypes = c("solid", "22")) {
   ggplot(sub, aes(x = seq_length, y = mean_success,
-                  colour = .data[[color_var]],
-                  fill   = .data[[color_var]],
-                  group  = interaction(true_type, tag))) +
-    geom_ribbon(aes(ymin = ci_lo, ymax = ci_hi),
-                alpha = 0.18, colour = NA) +
-    geom_line(linewidth = 0.7) +
-    geom_point(size = 2) +
-    x_log + y_pwr +
-    labs(x = "Sequence length (sites, log scale)",
-         y = "P(correct family & K)",
-         colour = color_lab, fill = color_lab, title = title) +
-    base_theme + theme(legend.position = "right")
-}
-
-save_pdf <- function(p, file, w = 7, h = 5) {
-  ggsave(file.path(OUT_BASE, file), p, width = w, height = h)
-  message("  ", file)
+                  colour   = .data[[colour_var]],
+                  linetype = .data[[linetype_var]],
+                  group    = interaction(true_type, tag))) +
+    geom_line(linewidth = 0.5) +
+    geom_point(size = 1.1) +
+    scale_colour_manual(values = palette, name = colour_lab) +
+    scale_linetype_manual(values = linetypes, name = linetype_lab) +
+    scale_x_length() + scale_y_prop() +
+    labs(x = "Sequence length (sites)", y = Y_LAB,
+         caption = sprintf("Mean across %d replicates.", n_reps_used)) +
+    theme_kpower() +
+    theme(legend.box = "horizontal")
 }
 
 # Loop over whatever K values are present in the data (e.g. 2, 3)
 true_K_values <- sort(unique(d$true_K))
 for (K in true_K_values) {
   message(sprintf("Line plots for K = %d", K))
-  save_pdf(
-    plot_one(d, K, "true_type", "Family",
-             sprintf("Recovery vs length (K = %d) -- by family", K)) +
-      aes(linetype = tag) + labs(linetype = "Class"),
-    sprintf("power_K%d_by_family.pdf", K)
-  )
-  save_pdf(
-    plot_one(d, K, "tag", "Class",
-             sprintf("Recovery vs length (K = %d) -- by class", K)) +
-      aes(linetype = true_type) + labs(linetype = "Family"),
-    sprintf("power_K%d_by_class.pdf", K)
-  )
-  save_pdf(
-    plot_one(d, K, "family_class", "Family x Class",
-             sprintf("Recovery vs length (K = %d) -- combined", K)),
-    sprintf("power_K%d_combined.pdf", K)
-  )
+  sub <- d[d$true_K == K, ]
+
+  # by family: hue = generating family, dash = class separation
+  p_fam <- power_lines(sub, "true_type", "tag", PALETTE_FAMILY,
+                       "Family", "Class") +
+    fig_labs(title = sprintf("Recovery vs length (K = %d), by family", K))
+  save_fig(p_fam, file.path(OUT_BASE, sprintf("power_K%d_by_family.pdf", K)),
+           width = "single", height = 2.9)
+
+  # by class: hue = class separation, dash = family
+  p_cls <- power_lines(sub, "tag", "true_type", PALETTE_CLASS,
+                       "Class", "Family",
+                       linetypes = c("solid", "22", "11")) +
+    fig_labs(title = sprintf("Recovery vs length (K = %d), by class", K))
+  save_fig(p_cls, file.path(OUT_BASE, sprintf("power_K%d_by_class.pdf", K)),
+           width = "single", height = 2.9)
+
+  # combined: the six family x class series as small multiples rather than six
+  # cycled hues -- three validated hues, one panel per class.
+  # The CI is drawn as a band behind each line rather than as per-point bars.
+  # Dodged linerange bars needed the x positions nudged off their true values
+  # to stop three families' bars colliding, and read as six separate glyphs per
+  # length; a band sits at the true x, needs no dodge, and stays visually
+  # subordinate to the line it belongs to.
+  p_comb <- ggplot(sub, aes(x = seq_length, y = mean_success,
+                            colour = true_type, group = true_type)) +
+    geom_ribbon(aes(ymin = ci_lo, ymax = ci_hi, fill = true_type),
+                alpha = 0.15, colour = NA) +
+    geom_line(linewidth = 0.5) +
+    geom_point(size = 1.1) +
+    facet_wrap(~ tag, nrow = 1,
+               labeller = labeller(tag = c(sep = "Separated classes",
+                                           close = "Close classes"))) +
+    scale_colour_manual(values = PALETTE_FAMILY, name = "Family") +
+    scale_fill_manual(values = PALETTE_FAMILY, guide = "none") +
+    scale_x_length() + scale_y_prop() +
+    labs(x = "Sequence length (sites)", y = Y_LAB,
+         caption = sprintf("Mean across %d replicates; bands are Wilson 95%% CIs.",
+                           n_reps_used)) +
+    fig_labs(title = sprintf("Recovery vs length (K = %d)", K)) +
+    theme_kpower()
+  save_fig(p_comb, file.path(OUT_BASE, sprintf("power_K%d_combined.pdf", K)),
+           width = "onehalf", height = 2.9)
 }
 
 # 3. Per-rep line plots -----------------------------------------------------
@@ -178,40 +337,46 @@ per_rep$row_label   <- factor(
 # matching mean rows (built earlier as `d`)
 d$row_label <- factor(d$row_label, levels = levels(per_rep$row_label))
 
-family_palette <- c("+R" = "#d6604d", "+H" = "#4393c3", "+T" = "#2ca02c")
-
 per_rep_panel <- function(K) {
   pr <- per_rep[per_rep$true_K == K, ]
   mn <- d[d$true_K == K, ]
+  # Per-rep outcomes are binary, so joining them with lines drew a stack of
+  # identical segments that hid how many reps sat on each value. Draw them as
+  # points jittered along x only (never along y, which would invent
+  # intermediate success values), with the mean and its Wilson CI on top.
   ggplot() +
-    geom_line(data = pr,
-              aes(x = seq_length, y = success_num,
-                  group = rep, colour = true_type),
-              alpha = 0.30, linewidth = 0.4) +
+    geom_point(data = pr,
+               aes(x = seq_length, y = success_num, colour = true_type),
+               position = position_jitter(width = 0.03, height = 0, seed = 1),
+               alpha = 0.35, size = 0.6) +
+    geom_ribbon(data = mn,
+                aes(x = seq_length, ymin = ci_lo, ymax = ci_hi,
+                    fill = true_type),
+                alpha = 0.15) +
     geom_line(data = mn,
               aes(x = seq_length, y = mean_success, colour = true_type),
-              linewidth = 1.2) +
+              linewidth = 0.7) +
     geom_point(data = mn,
                aes(x = seq_length, y = mean_success, colour = true_type),
-               size = 2) +
-    facet_wrap(~ row_label, ncol = 2,
+               size = 1.3) +
+    facet_wrap(~ row_label, ncol = 3,
                labeller = labeller(row_label = function(x) x)) +
-    scale_colour_manual(values = family_palette, guide = "none") +
-    x_log +
-    scale_y_continuous(limits = c(-0.05, 1.05),
-                       breaks = c(0, 0.25, 0.5, 0.75, 1)) +
-    labs(x = "Sequence length (sites, log scale)",
-         y = "Success (per rep: 0 or 1; bold = mean)",
-         title = sprintf("Per-rep recovery across length (K = %d, n=%d reps)",
-                         K, n_reps_used)) +
-    base_theme +
-    theme(strip.text = element_text(face = "bold"))
+    scale_colour_manual(values = PALETTE_FAMILY, guide = "none") +
+    scale_fill_manual(values = PALETTE_FAMILY, guide = "none") +
+    scale_x_length() +
+    scale_y_prop(limits = c(-0.06, 1.06), breaks = c(0, 0.5, 1)) +
+    labs(x = "Sequence length (sites)",
+         y = "Correct family & K",
+         caption = sprintf("Points: individual replicates (n = %d per scenario, jittered horizontally). Line: mean with Wilson 95%% CI.",
+                           n_reps_used)) +
+    fig_labs(title = sprintf("Per-replicate recovery across length (K = %d)", K)) +
+    theme_kpower()
 }
 
 for (K in true_K_values) {
-  save_pdf(per_rep_panel(K),
-           sprintf("power_K%d_per_rep.pdf", K),
-           w = 8, h = 7)
+  save_fig(per_rep_panel(K),
+           file.path(OUT_BASE, sprintf("power_K%d_per_rep.pdf", K)),
+           width = "double", height = 3.8)
 }
 
 message("\nDone.")

@@ -31,14 +31,21 @@ PALETTE_FAMILY <- c("+R" = "#D55E00",   # vermillion
 PALETTE_CLASS  <- c("sep" = "#0072B2",  # blue
                     "close" = "#B35900")# dark orange
 
-# Sequential: ONE hue, light -> dark. Single-hue keeps the heatmap readable in
-# greyscale reproduction, which a diverging or rainbow ramp does not. ColorBrewer
-# Blues: the conventional scheme for a proportion, and neutral -- a red/orange
-# ramp reads as heat/alarm on a quantity that is *good* when high, and would sit
-# in the same hue family as vermillion "+R". The low end is Blues step 2 rather
-# than the near-white step 1, so 0% cells still read as tiles.
-SEQ_LOW  <- "#DEEBF7"
-SEQ_HIGH <- "#08519C"
+# Sequential: ONE hue, light -> dark (ColorBrewer Purples, steps 2-9). Single
+# hue keeps the heatmap readable in greyscale reproduction and reads as one
+# continuous magnitude; viridis was tried and rejected because its violet ->
+# teal -> green -> yellow path looks like a scale in several pieces, implying
+# regime boundaries the quantity does not have. Purple is neutral on a
+# proportion that is *good* when high (a red/orange ramp reads as heat/alarm)
+# and stays clear of the categorical family colours. The low end is step 2
+# rather than the near-white step 1, so 0% cells still read as tiles. Ramped
+# through the intermediate steps, not interpolated between the endpoints, so
+# lightness climbs evenly.
+SEQ_COLOURS <- grDevices::colorRampPalette(
+  c("#EFEDF5", "#DADAEB", "#BCBDDC", "#9E9AC8",
+    "#807DBA", "#6A51A3", "#54278F", "#3F007D"))(256)
+SEQ_LOW     <- SEQ_COLOURS[1]
+SEQ_HIGH    <- SEQ_COLOURS[length(SEQ_COLOURS)]
 
 # Text and structural ink. Text never wears the series colour.
 INK <- c(primary = "#1A1A1A", secondary = "#4D4D4D",
@@ -148,15 +155,25 @@ open_atlas <- function(path, width = 6.5, height = 4.5) {
   grDevices::cairo_pdf(path, width = width, height = height, onefile = TRUE)
 }
 
-# Readable label colour for a filled tile: flip to white once the fill is dark
-# enough that near-black text would fail contrast.
-label_ink_for_fill <- function(values, low = SEQ_LOW, high = SEQ_HIGH,
+# Readable label colour for a filled tile: take whichever of white and the
+# primary ink has the higher WCAG contrast against the fill. The two are equal
+# where the fill's relative luminance L solves 1.05/(L+0.05) = (L+0.05)/(Li+0.05)
+# for the ink luminance Li, i.e. L = sqrt(1.05*(Li+0.05)) - 0.05 -- about 0.20
+# against #1A1A1A, so the flip happens well down the ramp. A fixed 0.42 cutoff
+# was wrong for any ramp whose midtones are mid-lightness: it put white on
+# #A3A1CB at 2.5:1 where near-black would have had 7:1.
+rel_luminance <- function(rgb01) {
+  lin <- ifelse(rgb01 <= 0.03928, rgb01 / 12.92, ((rgb01 + 0.055) / 1.055)^2.4)
+  as.vector(lin %*% c(0.2126, 0.7152, 0.0722))
+}
+
+label_ink_for_fill <- function(values, colours = SEQ_COLOURS,
                                limits = c(0, 1)) {
-  ramp <- grDevices::colorRamp(c(low, high))
+  ramp <- grDevices::colorRamp(colours)
   frac <- (values - limits[1]) / diff(limits)
   frac[is.na(frac)] <- 0
-  rgb  <- ramp(pmin(pmax(frac, 0), 1)) / 255
-  lin  <- ifelse(rgb <= 0.03928, rgb / 12.92, ((rgb + 0.055) / 1.055)^2.4)
-  lum  <- lin %*% c(0.2126, 0.7152, 0.0722)
-  ifelse(lum < 0.42, "#FFFFFF", INK[["primary"]])
+  lum  <- rel_luminance(ramp(pmin(pmax(frac, 0), 1)) / 255)
+  ink_lum  <- rel_luminance(t(grDevices::col2rgb(INK[["primary"]])) / 255)
+  crossover <- sqrt(1.05 * (ink_lum + 0.05)) - 0.05
+  ifelse(lum < crossover, "#FFFFFF", INK[["primary"]])
 }

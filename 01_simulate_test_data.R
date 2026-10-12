@@ -10,10 +10,13 @@
 #
 # A single "spread" parameter per family per class type is applied
 # identically to K=2 and K=4:
-#   +R: rates are a geometric series from 1/s to s, equal proportions,
-#       rescaled so weighted mean rate = 1 (preserves overall tree length)
-#       sep   -> s = 4     (16x fast/slow ratio)
-#       close -> s = 1.8   (~3.2x ratio)
+#   +R: rates are a geometric series with a FIXED RATIO OF s^2 BETWEEN
+#       ADJACENT categories, equal proportions, rescaled so weighted mean
+#       rate = 1 (preserves overall tree length). The per-category contrast
+#       is therefore the same for every K; the total fast/slow range grows
+#       as s^(2(K-1)).
+#       sep   -> s = 4     (16x per step;  16x range at K=2, 256x at K=3)
+#       close -> s = 1.8   (3.2x per step; 3.2x range at K=2, 10.5x at K=3)
 #   +H: each class has independently-perturbed branch lengths via lognormal
 #       deviates with sd = log_sd, then rescaled to preserve base TL
 #       (see heterotachy_tree() and CLAUDE.md)
@@ -154,13 +157,17 @@ nni_tree <- function(tr, n_moves = 3, seed = NULL) {
 
 #' Build +R{K} model string with geometric rates + equal proportions, mean=1
 #'
-#' Rates form a geometric series from 1/s to s (K points), then rescaled so
-#' that the weighted mean rate equals 1 (equal proportions = 1/K).
+#' Rates form a geometric series centred on 1 with a fixed ratio of s^2
+#' between adjacent categories, then rescaled so that the weighted mean rate
+#' equals 1 (equal proportions = 1/K). Anchoring the *step* rather than the
+#' *range* keeps the per-category contrast constant across K, so K=2 and K=3
+#' scenarios are equally hard per category; the exponents are chosen so K=2
+#' reproduces the earlier s^{-1,1} parameterisation exactly.
 build_freerate_model <- function(base_model, K, s) {
   if (K == 1) {
     raw <- 1
   } else {
-    raw <- s ^ seq(-1, 1, length.out = K)
+    raw <- s ^ (2 * (seq_len(K) - (K + 1) / 2))
   }
   rates <- raw / mean(raw)                 # equal weights -> mean = 1
   props <- rep(1 / K, K)

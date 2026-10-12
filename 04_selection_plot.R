@@ -26,8 +26,16 @@ SCRIPT_DIR <- tryCatch(
   dirname(normalizePath(sys.frame(1)$ofile, mustWork = FALSE)),
   error = function(e) getwd()
 )
-OUT_BASE    <- file.path(SCRIPT_DIR, "results")
+# Results directory: defaults to results/. Set KPOWER_RESULTS_DIR (absolute, or
+# relative to this script) to plot an archived run, e.g. results_B50.
+OUT_BASE    <- local({
+  o <- Sys.getenv("KPOWER_RESULTS_DIR", "results")
+  if (startsWith(o, "/")) o else file.path(SCRIPT_DIR, o)
+})
 SUMMARY_CSV <- file.path(OUT_BASE, "summary.csv")
+
+# Shared publication theme, palettes and save helpers.
+source(file.path(SCRIPT_DIR, "00_plot_theme.R"))
 
 if (!file.exists(SUMMARY_CSV))
   stop("No summary.csv. Run 02_run_kpower_tests.R first.")
@@ -78,43 +86,39 @@ d$picked    <- factor(d$picked,    levels = c("+R", "+H", "+T"))
 n_reps_used <- max(d$n_reps, na.rm = TRUE)
 message(sprintf("Selection plots: aggregating across up to %d reps", n_reps_used))
 
-family_palette <- c("+R" = "#d6604d", "+H" = "#4393c3", "+T" = "#2ca02c")
-
-x_log <- scale_x_log10(breaks = c(100, 300, 1000, 3000, 6000),
-                       labels = c("100", "300", "1k", "3k", "6k"))
-y_pwr <- scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, 0.25))
-
-base_theme <- theme_minimal(base_size = 11) +
-  theme(panel.grid.minor = element_blank(),
-        strip.text       = element_text(face = "bold"),
-        legend.position  = "bottom")
-
 # Plot one panel per K present in data (e.g. 2 and 3)
 true_K_values <- sort(unique(d$true_K))
 for (K in true_K_values) {
   sub <- d[d$true_K == K, ]
+  # A faint rule at 1.0 gives the eye the target each panel's true-family line
+  # should approach, without adding a second scale.
+  # CIs as dodged bars rather than ribbons: three overlapping translucent
+  # bands mixed into hues that matched none of the three families.
+  dodge <- position_dodge(width = 0.09)   # log10 units: ~5% of x
   p <- ggplot(sub, aes(x = seq_length, y = frac,
-                       colour = picked, fill = picked,
-                       group  = picked)) +
-    geom_ribbon(aes(ymin = ci_lo, ymax = ci_hi),
-                alpha = 0.18, colour = NA) +
-    geom_line(linewidth = 0.7) +
-    geom_point(size = 2) +
+                       colour = picked, group = picked)) +
+    geom_hline(yintercept = 1, linewidth = 0.3, linetype = "22",
+               colour = INK[["grid"]]) +
+    geom_linerange(aes(ymin = ci_lo, ymax = ci_hi), position = dodge,
+                   linewidth = 0.4, alpha = 0.55) +
+    geom_line(linewidth = 0.5, position = dodge) +
+    geom_point(size = 1.1, position = dodge) +
     facet_grid(true_type ~ tag,
-               labeller = labeller(true_type = function(x) paste("true:", x),
-                                   tag       = function(x) paste("class:", x))) +
-    x_log + y_pwr +
-    scale_colour_manual(values = family_palette, name = "kpower picked") +
-    scale_fill_manual(values = family_palette, guide = "none") +
-    labs(x = "Sequence length (sites, log scale)",
-         y = "Fraction of reps kpower picks this family",
-         title = sprintf("Empirical family selection (K = %d, mean across %d reps)",
-                         K, n_reps_used)) +
-    base_theme
+               labeller = labeller(
+                 true_type = function(x) paste("true", x),
+                 tag       = c(sep = "Separated classes",
+                               close = "Close classes"))) +
+    scale_x_length() + scale_y_prop() +
+    scale_colour_manual(values = PALETTE_FAMILY, name = "Family selected") +
+    labs(x = "Sequence length (sites)",
+         y = "Replicates selecting this family",
+         caption = sprintf("Mean across %d replicates; bars are Wilson 95%% CIs, dodged for legibility.",
+                           n_reps_used)) +
+    fig_labs(title = sprintf("Empirical family selection (K = %d)", K)) +
+    theme_kpower()
 
-  out <- file.path(OUT_BASE, sprintf("selection_K%d.pdf", K))
-  ggsave(out, p, width = 8, height = 7)
-  message("Wrote ", basename(out))
+  save_fig(p, file.path(OUT_BASE, sprintf("selection_K%d.pdf", K)),
+           width = "onehalf", height = 4.4)
 }
 
 message("\nDone.")

@@ -38,10 +38,19 @@ Rscript 01_simulate_test_data.R
 
 # 2. Run kpower_survey on each alignment (~2-3 hours)
 Rscript 02_run_kpower_tests.R
+
+# 3-6. Build figures from results/ (fast; cache-backed)
+Rscript 03_plot_power.R       # recovery heatmaps (AIC/AICc/BIC) + power line/per-rep plots
+Rscript 04_selection_plot.R   # per-bootstrap family-selection plots
+Rscript 05_tree_metrics.R     # stemminess & root-to-tip CoV, empirical vs reps across K
+Rscript 06_ic_profiles.R      # IC-through-K overlays (AIC/AICc/BIC), empirical vs reps
 ```
 
 Results are written to `results/summary.csv` and per-scenario RDS/PDF
-files in `results/<scenario>/`.
+files in `results/<scenario>/`. Scripts `03`-`06` each cache their
+extracted data to a CSV under `results/` (`correct_by_ic.csv`,
+`tree_metrics.csv`, `ic_tables.csv`) and skip the rescan on re-run;
+set the matching `REBUILD_*=1` env var to force one.
 
 ## Test design
 
@@ -92,8 +101,11 @@ power tool -- with one striking exception: +T close (RF=2) reaches 90%
 power at L=6000, showing even a tiny topological split is recoverable
 given enough data.
 
-See `results/power_heatmap.pdf` for the full power grid and
-`results/selection_K{2,4}.pdf` for per-bootstrap family selection.
+See `results/power_heatmap_{AIC,AICc,BIC}.pdf` for the full power grid
+under each information criterion, `results/selection_K{2,4}.pdf` for
+per-bootstrap family selection, `results/ic_profiles_{AIC,AICc,BIC}.pdf`
+for IC-through-K profiles (empirical vs bootstrap reps), and
+`results/{stemminess,rrt_cov}.pdf` for tree-shape metrics across K.
 
 ## Bugs found and fixed
 
@@ -117,11 +129,18 @@ kpower_tests/
   TESTS_BRIEF.md                # Detailed design, results, and discussion
   01_simulate_test_data.R       # Simulate all +R, +H, +T alignments
   02_run_kpower_tests.R         # Run kpower_survey on each, write summary
+  03_plot_power.R               # Recovery heatmaps (AIC/AICc/BIC) + power plots
+  04_selection_plot.R           # Per-bootstrap family-selection plots
+  05_tree_metrics.R             # Stemminess & root-to-tip CoV across K
+  06_ic_profiles.R              # IC-through-K overlays (AIC/AICc/BIC)
   alignments/                   # Simulated data (not tracked in git)
     test_tree.nwk
     <scenario>/sim.phy
   results/                      # Survey output (not tracked in git)
     summary.csv
+    correct_by_ic.csv           # cache: recovery under each IC (from 03)
+    tree_metrics.csv            # cache: tree-shape metrics (from 05)
+    ic_tables.csv               # cache: pooled IC-vs-K tables (from 06)
     <scenario>/survey_result.rds
 ```
 
