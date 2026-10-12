@@ -1,0 +1,147 @@
+IQ-TREE 3.0.1 built May  5 2025
+
+Input file name: /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_sep_L100/survey_runs/survey_R_linked/simulations/sim_4.phy
+Type of analysis: tree reconstruction
+Random seed number: 511807
+
+REFERENCES
+----------
+
+To cite IQ-TREE 3 please use:
+
+Thomas K.F. Wong, Nhan Ly-Trong, Huaiyan Ren, Hector Banos, Andrew J. Roger,
+Edward Susko, Chris Bielow, Nicola De Maio, Nick Goldman, Matthew W. Hahn,
+Gavin Huttley, Robert Lanfear, Bui Quang Minh (2025)
+IQ-TREE 3: Phylogenomic Inference Software using Complex Evolutionary Models.
+Submitted.
+
+Please also cite the following paper(s) for the feature(s) that you used:
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 20 sequences with 100 nucleotide sites
+Number of constant sites: 0 (= 0% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 0 (= 0% of all sites)
+Number of parsimony informative sites: 92
+Number of distinct site patterns: 99
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F+R4
+
+Rate parameter R:
+
+  A-C: 3.9904
+  A-G: 0.8451
+  A-T: 1.0465
+  C-G: 0.3625
+  C-T: 3.0980
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.3235
+  pi(C) = 0.2065
+  pi(G) = 0.1875
+  pi(T) = 0.2825
+
+Rate matrix Q:
+
+  A   -0.9665    0.6231    0.1198    0.2236
+  C    0.9762    -1.689   0.05139    0.6618
+  G    0.2067    0.0566    -0.477    0.2136
+  T     0.256    0.4838    0.1418   -0.8816
+
+Model of rate heterogeneity: FreeRate with 4 categories
+Site proportion and rates:  (0.4995,0.7751) (0.000497,1.22) (0.4995,1.224) (0.0004995,1.269)
+
+ Category  Relative_rate  Proportion
+  1         0.7751         0.4995
+  2         1.22           0.000497
+  3         1.224          0.4995
+  4         1.269          0.0004995
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -1728.8912 (s.e. 45.9595)
+Unconstrained log-likelihood (without tree): -459.1307
+Number of free parameters (#branches + #model parameters): 51
+Akaike information criterion (AIC) score: 3559.7825
+Corrected Akaike information criterion (AICc) score: 3670.2825
+Bayesian information criterion (BIC) score: 3692.6461
+
+Total tree length (sum of branch lengths): 7.0650
+Sum of internal branch lengths: 3.3699 (47.6980% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon 't4' is drawn at root
+
++**t4
+|
+|         +---------------t5
++---------|
+|         |                                  +--t14
+|         |                   +--------------|
+|         |                   |              +-----t15
+|         +-------------------|
+|                             +**t3
+|
+|                                     +-------------t9
+|                          +----------|
+|                          |          +-----t17
+|                   +------|
+|                   |      +-----t11
+|          +--------|
+|          |        |  +---------------------------t20
+|          |        +--|
+|          |           |         +------t19
+|          |           |      +--|
+|          |           |      |  +--t13
+|          |           +------|
+|          |                  |        +--t12
+|          |                  +--------|
+|          |                           |               +--------t2
+|          |                           |     +---------|
+|          |                           |     |         +--t18
+|          |                           |  +--|
+|          |                           |  |  |  +--t16
+|          |                           |  |  +--|
+|          |                           |  |     +**t8
+|          |                           +--|
+|          |                              +---------t1
+|       +--|
+|       |  +-------t10
++-------|
+        |  +------------t6
+        +--|
+           +--t7
+
+Tree in newick format:
+
+(t4:0.0000024615,(t5:0.4552513982,((t14:0.0420381702,t15:0.1662431788):0.4194186102,t3:0.0000022408):0.5440820929):0.2977531480,(((((t9:0.3797922899,t17:0.1689227741):0.3077259350,t11:0.1629676927):0.2054875021,(t20:0.7764712889,((t19:0.1961861214,t13:0.0487705904):0.0695225213,(t12:0.0979159038,(((t2:0.2533793339,t18:0.0503144155):0.2872539568,(t16:0.0318977121,t8:0.0077734717):0.0817335012):0.0722231516,t1:0.2723468396):0.0117965497):0.2581531057):0.2090422972):0.0196722403):0.2681403440,t10:0.2178891291):0.0231474252,(t6:0.3529454594,t7:0.0140507775):0.0733924127):0.2213407100);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_sep_L100/survey_runs/survey_R_linked/sim_fits/sim0015_K4/sim0015_K4.treefile -m "GTR{3.99035,0.845135,1.04654,0.362476,3.09804}+F{0.3235,0.2065,0.1875,0.2825}+R4{0.499491,0.77507,0.000496954,1.21963,0.499512,1.22443,0.000499512,1.26921}" --length 100
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_sep_L100/survey_runs/survey_R_linked/simulations/sim_4.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_sep_L100/survey_runs/survey_R_linked/simulations/sim_4.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Wed Apr  8 07:39:37 2026
+Total CPU time used: 0.049948 seconds (0h:0m:0s)
+Total wall-clock time used: 0.0724311 seconds (0h:0m:0s)
+

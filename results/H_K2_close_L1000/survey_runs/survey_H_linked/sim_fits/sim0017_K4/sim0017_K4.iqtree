@@ -1,0 +1,146 @@
+IQ-TREE 3.0.1 built May  5 2025
+
+Input file name: /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/simulations/sim_6.phy
+Type of analysis: tree reconstruction
+Random seed number: 21411
+
+REFERENCES
+----------
+
+To cite IQ-TREE 3 please use:
+
+Thomas K.F. Wong, Nhan Ly-Trong, Huaiyan Ren, Hector Banos, Andrew J. Roger,
+Edward Susko, Chris Bielow, Nicola De Maio, Nick Goldman, Matthew W. Hahn,
+Gavin Huttley, Robert Lanfear, Bui Quang Minh (2025)
+IQ-TREE 3: Phylogenomic Inference Software using Complex Evolutionary Models.
+Submitted.
+
+Please also cite the following paper(s) for the feature(s) that you used:
+
+To cite the GHOST "+H" please use: 
+
+Stephen M Crotty, Bui Quang Minh, Nigel G Bean, Barbara R Holland, Jonathan Tuke, Lars S Jermiin, Arndt Von Haeseler (2020)
+GHOST: Recovering Historical Signal from Heterotachously Evolved Sequence Alignments.
+Systematic Biology, 69:249-264.
+https://doi.org/10.1093/sysbio/syz051
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 20 sequences with 1000 nucleotide sites
+Number of constant sites: 51 (= 5.1% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 51 (= 5.1% of all sites)
+Number of parsimony informative sites: 801
+Number of distinct site patterns: 922
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F+H4
+
+Rate parameter R:
+
+  A-C: 5.1027
+  A-G: 1.0762
+  A-T: 1.1783
+  C-G: 0.9690
+  C-T: 5.6679
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.3142
+  pi(C) = 0.1952
+  pi(G) = 0.1984
+  pi(T) = 0.2922
+
+Rate matrix Q:
+
+  A   -0.8566    0.5491    0.1177    0.1898
+  C    0.8839    -1.903     0.106    0.9129
+  G    0.1864    0.1043   -0.4517    0.1611
+  T    0.2041    0.6099    0.1094   -0.9234
+
+Model of rate heterogeneity: Rate heterotachy with 4 categories
+Heterotachy weights:      0.02847 0.8042 0.141 0.02629
+Heterotachy tree lengths: 17.19 4.293 3.51 2.737
+
+ Category  Relative_rate  Proportion
+  1         1              0.02847
+  2         1              0.8042
+  3         1              0.141
+  4         1              0.02629
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -14077.8064 (s.e. 166.7244)
+Unconstrained log-likelihood (without tree): -6699.5799
+Number of free parameters (#branches + #model parameters): 159
+Akaike information criterion (AIC) score: 28473.6128
+Corrected Akaike information criterion (AICc) score: 28534.1842
+Bayesian information criterion (BIC) score: 29253.9459
+
+Total tree length (sum of branch lengths): 4.5089
+Sum of internal branch lengths: 1.8298 (40.5805% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon 't4' is drawn at root
+NOTE: Branch lengths are weighted average over heterotachy classes
+
++---t4
+|
+|  +-----------t5
++--|
+|  |                  +----------t14
+|  |      +-----------|
+|  |      |           +-------t15
+|  +------|
+|         +----------------t3
+|
+|                                 +-----t9
+|                             +---|
+|                             |   +----------t17
+|                          +--|
+|                          |  +-----t11
+|        +-----------------|
+|        |                 +----------t20
+|   +----|
+|   |    |     +------t19
+|   |    |  +--|
+|   |    |  |  +---t13
+|   |    +--|
+|   |       |            +---------t12
+|   |       +------------|
+|   |                    |                        +--------t2
+|   |                    |                     +--|
+|   |                    |                     |  +-------t18
+|   |                    |                  +--|
+|   |                    |                  |  +--t16
+|   |                    |         +--------|
+|   |                    |         |        +--t8
+|   |                    +---------|
+|   |                              +--t1
++---|
+    |  +----t10
+    +--|
+       |    +---------t6
+       +----|
+            +--t7
+
+Tree in newick format: (class branch lengths are given in [...] and separated by '/' )
+
+(t4[0.074533/0.092010/0.047691/0.000002]:0.082843,(t5[0.749579/0.210614/0.143671/0.228687]:0.216989,((t14[0.000002/0.217233/0.219566/0.000002]:0.205667,t15[0.322253/0.174057/0.001642/0.000002]:0.149383)[0.084346/0.264462/0.054787/0.000002]:0.222811,t3[0.517199/0.345500/0.123718/0.000002]:0.310025)[0.207526/0.162517/0.000592/0.000002]:0.136688)[0.160210/0.000002/0.103495/0.000002]:0.019159,(((((t9[0.157732/0.106679/0.158479/0.000002]:0.112633,t17[0.766264/0.167376/0.267466/0.061507]:0.195757)[0.000002/0.043302/0.279395/0.000001]:0.074229,t11[0.751766/0.116474/0.000002/0.000002]:0.115069)[0.009810/0.016739/0.000001/0.000001]:0.013741,t20[0.028508/0.218311/0.000001/0.542953]:0.190652)[10.000000/0.026260/0.048518/0.009950]:0.312878,((t19[0.000002/0.146075/0.112939/0.000002]:0.133403,t13[0.000001/0.102609/0.000002/0.000001]:0.082519)[0.000003/0.050431/0.083244/0.000001]:0.052297,(t12[0.064014/0.174785/0.284848/0.000002]:0.182560,((((t2[0.425513/0.153470/0.257757/0.000002]:0.171887,t18[0.051888/0.145986/0.162220/0.000001]:0.141759)[0.000003/0.064193/0.005222/0.000001]:0.052361,t16[0.080513/0.064911/0.019914/0.000002]:0.057303)[0.053191/0.052786/0.013969/0.000003]:0.045935,t8[0.000002/0.008356/0.028286/0.000002]:0.010709)[0.218698/0.124030/0.233269/0.712773]:0.157609,t1[0.100737/0.036112/0.013675/0.000002]:0.033838)[0.000002/0.216811/0.000003/0.000002]:0.174361)[0.111146/0.183066/0.394036/0.979559]:0.231713)[0.015836/0.031434/0.014584/0.000003]:0.027787)[0.673369/0.103823/0.000021/0.000001]:0.102666,(t10[0.492723/0.097732/0.000002/0.000002]:0.092623,(t6[0.858555/0.162792/0.198004/0.201319]:0.188576,t7[0.000002/0.006205/0.000002/0.000002]:0.004991)[0.111822/0.104182/0.000001/0.000001]:0.086968)[0.000002/0.055468/0.000002/0.000002]:0.044608)[0.099575/0.046499/0.239009/0.000001]:0.073939);
+
+ALISIM COMMAND
+--------------
+Currently, we only support exporting AliSim commands automatically from the analysis for common models of DNA, Protein, Binary, and Morphological data. To simulate data from other models (mixture, lie-markov, etc), please refer to the User Manual of AliSim. Thanks!
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Wed Apr  8 07:22:41 2026
+Total CPU time used: 0.989024 seconds (0h:0m:0s)
+Total wall-clock time used: 1.04844 seconds (0h:0m:1s)
+

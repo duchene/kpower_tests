@@ -1,0 +1,27 @@
+=== Gblocks block selection: 2026-10-02 12:20:25 ===
+
+ebola: 27 taxa x 21130 positions (input)
+  b1 = 14  b2 strict = 23  b2 relaxed = 14
+  strict   14653 sites   (69 %) in 87 selected block(s)
+           missing 0.01%   p-dist median 0.333  max 0.355
+  relaxed  18523 sites   (87 %) in 164 selected block(s)
+           missing 3.08%   p-dist median 0.373  max 0.396
+
+marburg: 16 taxa x 22502 positions (input)
+  b1 = 9  b2 strict = 14  b2 relaxed = 9
+  strict   16227 sites   (72 %) in 223 selected block(s)
+           missing 0.00%   p-dist median 0.071  max 0.414
+  relaxed  19100 sites   (84 %) in 170 selected block(s)
+           missing 0.95%   p-dist median 0.079  max 0.418
+
+
+=== Comparison ===
+  clade    setting   taxa   sites   missing  median_p    max_p
+  ebola    strict      27   14653     0.01%     0.333    0.355
+  ebola    relaxed     27   18523     3.08%     0.373    0.396
+  marburg  strict      16   16227     0.00%     0.071    0.414
+  marburg  relaxed     16   19100     0.95%     0.079    0.418
+
+Open the .html files to see which blocks were selected.
+Then pick a setting and point 02_run_kpower_survey.R at
+  <clade>_gb_<setting>.fasta

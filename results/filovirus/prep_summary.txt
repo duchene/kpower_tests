@@ -1,0 +1,134 @@
+=== kpower filovirus prep v3: 2026-10-02 09:59:51 ===
+
+Read 854 sequences (13066-20943 bp)
+  excluded 11 unalignable records (fish/reptile filoviruses, Lloviu)
+  excluded 20 engineered/unverified records
+
+
+###########################################################
+### Orthoebolavirus  (ebola)
+###########################################################
+
+Pool for this clade: 726 sequences
+Subsampled 72 near-complete genomes:
+  Bundibugyo   15   (18342-18940 bp)
+  Reston       15   (18796-18891 bp)
+  Sudan        15   (18831-18875 bp)
+  Zaire        15   (18801-18959 bp)
+  Bombali       8   (18891-19043 bp)
+  TaiForest     4   (18890-18935 bp)
+
+MAFFT (--retree 2 --maxiterate 2 --reorder, 6 threads) - pass 1 ...
+  done in 3.6 min
+  aligned length 21029 vs median input 18879  (expansion 1.11x)
+
+Distances after pass 1:
+  pairwise p-distance: median 0.377  mean 0.312  max 0.402  (2556 pairs)
+  pairs above 0.45: 0  (0.0%)
+  median p-distance between lineages:
+                BombaliBundibugyo  Reston   SudanTaiForest   Zaire
+    Bombali       0.023   0.381   0.397   0.401   0.381   0.371
+    Bundibugyo    0.381   0.012   0.385   0.388   0.309   0.341
+    Reston        0.397   0.385   0.019   0.373   0.386   0.377
+    Sudan         0.401   0.388   0.373   0.050   0.391   0.383
+    TaiForest     0.381   0.309   0.386   0.391   0.000   0.342
+    Zaire         0.371   0.341   0.377   0.383   0.342   0.030
+Saturation prune removed 0 taxa
+Duplicate prune removed 45 taxa (< 50 substitutions apart)
+
+Retained 27 taxa:
+  Bombali       6
+  Reston        6
+  Sudan         6
+  Zaire         5
+  Bundibugyo    3
+  TaiForest     1
+
+MAFFT (--retree 2 --maxiterate 2 --reorder, 6 threads) - pass 2, retained taxa only ...
+  done in 2.5 min
+  aligned length 21130 vs median input 18879  (expansion 1.12x)
+
+Missing data before site filtering: 10.5%
+Columns kept at <=50% missing: 19010 / 21130 (90.0%)
+
+Distances in the FINAL filtered alignment:
+  pairwise p-distance: median 0.377  mean 0.319  max 0.400  (351 pairs)
+  pairs above 0.45: 0  (0.0%)
+  median p-distance between lineages:
+                BombaliBundibugyo  Reston   SudanTaiForest   Zaire
+    Bombali       0.022   0.379   0.394   0.399   0.380   0.369
+    Bundibugyo    0.379   0.012   0.383   0.384   0.299   0.337
+    Reston        0.394   0.383   0.018   0.371   0.383   0.374
+    Sudan         0.399   0.384   0.371   0.050   0.385   0.380
+    TaiForest     0.380   0.299   0.383   0.385       -   0.339
+    Zaire         0.369   0.337   0.374   0.380   0.339   0.025
+
+Column occupancy: 86.5% of kept columns are >=90% occupied
+Mean pairwise identity: 68.1%
+
+FINAL (ebola): 27 taxa x 19010 sites
+  missing data: 3.8%
+  expansion vs median genome: 1.01x
+Wrote ebola_filtered.fasta / .phy / _distances.csv
+
+
+###########################################################
+### Orthomarburgvirus + Mengla/Dehong  (marburg)
+###########################################################
+
+Pool for this clade: 97 sequences
+Subsampled 23 near-complete genomes:
+  Marburg      20   (19030-19151 bp)
+  Mengla        2   (18300-18555 bp)
+  Dehong        1   (20943-20943 bp)
+
+MAFFT (--retree 2 --maxiterate 2 --reorder, 6 threads) - pass 1 ...
+  done in 1.7 min
+  aligned length 22555 vs median input 19114  (expansion 1.18x)
+
+Distances after pass 1:
+  pairwise p-distance: median 0.078  mean 0.164  max 0.417  (253 pairs)
+  pairs above 0.45: 0  (0.0%)
+  median p-distance between lineages:
+                 Dehong Marburg  Mengla
+    Dehong            -   0.374   0.416
+    Marburg       0.374   0.075   0.416
+    Mengla        0.416   0.416   0.000
+Saturation prune removed 0 taxa
+Duplicate prune removed 7 taxa (< 50 substitutions apart)
+
+Retained 16 taxa:
+  Marburg      14
+  Dehong        1
+  Mengla        1
+
+MAFFT (--retree 2 --maxiterate 2 --reorder, 6 threads) - pass 2, retained taxa only ...
+  done in 1.5 min
+  aligned length 22502 vs median input 19114  (expansion 1.18x)
+
+Missing data before site filtering: 14.7%
+Columns kept at <=50% missing: 19114 / 22502 (84.9%)
+
+Distances in the FINAL filtered alignment:
+  pairwise p-distance: median 0.079  mean 0.170  max 0.418  (120 pairs)
+  pairs above 0.45: 0  (0.0%)
+  median p-distance between lineages:
+                 Dehong Marburg  Mengla
+    Dehong            -   0.373   0.414
+    Marburg       0.373   0.077   0.417
+    Mengla        0.414   0.417       -
+
+Column occupancy: 97.7% of kept columns are >=90% occupied
+Mean pairwise identity: 83.0%
+
+FINAL (marburg): 16 taxa x 19114 sites
+  missing data: 1.0%
+  expansion vs median genome: 1.00x
+Wrote marburg_filtered.fasta / .phy / _distances.csv
+
+
+=== Summary ===
+  ebola     27 taxa x 19010 sites   p-dist median 0.377 max 0.400   missing 3.8%   expansion 1.01x
+  marburg   16 taxa x 19114 sites   p-dist median 0.079 max 0.418   missing 1.0%   expansion 1.00x
+
+Gates: expansion < ~1.2x, max p-dist <= 0.45, missing well under 10%

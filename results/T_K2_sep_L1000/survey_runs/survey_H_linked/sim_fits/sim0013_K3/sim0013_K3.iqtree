@@ -1,0 +1,145 @@
+IQ-TREE 3.0.1 built May  5 2025
+
+Input file name: /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L1000/survey_runs/survey_H_linked/simulations/sim_20.phy
+Type of analysis: tree reconstruction
+Random seed number: 875378
+
+REFERENCES
+----------
+
+To cite IQ-TREE 3 please use:
+
+Thomas K.F. Wong, Nhan Ly-Trong, Huaiyan Ren, Hector Banos, Andrew J. Roger,
+Edward Susko, Chris Bielow, Nicola De Maio, Nick Goldman, Matthew W. Hahn,
+Gavin Huttley, Robert Lanfear, Bui Quang Minh (2025)
+IQ-TREE 3: Phylogenomic Inference Software using Complex Evolutionary Models.
+Submitted.
+
+Please also cite the following paper(s) for the feature(s) that you used:
+
+To cite the GHOST "+H" please use: 
+
+Stephen M Crotty, Bui Quang Minh, Nigel G Bean, Barbara R Holland, Jonathan Tuke, Lars S Jermiin, Arndt Von Haeseler (2020)
+GHOST: Recovering Historical Signal from Heterotachously Evolved Sequence Alignments.
+Systematic Biology, 69:249-264.
+https://doi.org/10.1093/sysbio/syz051
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 20 sequences with 1000 nucleotide sites
+Number of constant sites: 56 (= 5.6% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 56 (= 5.6% of all sites)
+Number of parsimony informative sites: 786
+Number of distinct site patterns: 907
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F+H3
+
+Rate parameter R:
+
+  A-C: 7.0387
+  A-G: 1.4993
+  A-T: 1.1398
+  C-G: 1.1492
+  C-T: 6.8920
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.2911
+  pi(C) = 0.188
+  pi(G) = 0.2278
+  pi(T) = 0.2932
+
+Rate matrix Q:
+
+  A   -0.9275     0.614    0.1585     0.155
+  C    0.9505    -2.009    0.1215    0.9374
+  G    0.2025    0.1002   -0.4387     0.136
+  T    0.1539    0.6012    0.1057   -0.8608
+
+Model of rate heterogeneity: Rate heterotachy with 3 categories
+Heterotachy weights:      0.01873 0.9746 0.006644
+Heterotachy tree lengths: 11.42 4.254 1.368
+
+ Category  Relative_rate  Proportion
+  1         1              0.01873
+  2         1              0.9746
+  3         1              0.006644
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -14231.7664 (s.e. 173.6020)
+Unconstrained log-likelihood (without tree): -6661.6834
+Number of free parameters (#branches + #model parameters): 121
+Akaike information criterion (AIC) score: 28705.5327
+Corrected Akaike information criterion (AICc) score: 28739.1592
+Bayesian information criterion (BIC) score: 29299.3711
+
+Total tree length (sum of branch lengths): 4.3693
+Sum of internal branch lengths: 1.4024 (32.0954% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon 't4' is drawn at root
+NOTE: Branch lengths are weighted average over heterotachy classes
+
++------t4
+|
+|  +----------t5
++--|
+|  |                   +---t9
+|  |              +----|
+|  |              |    +--------t17
+|  |           +--|
+|  |           |  |  +---------t11
+|  |           |  +--|
+|  |           |     +---------t20
+|  |   +-------|
+|  |   |       |          +----t19
+|  |   |       |       +--|
+|  |   |       |       |  +--------t13
+|  |   |       |  +----|
+|  |   |       |  |    |                             +--------t2
+|  |   |       |  |    |                          +--|
+|  |   |       |  |    |                          |  +--------t18
+|  |   |       |  |    |                       +--|
+|  |   |       |  |    |                       |  +------t1
+|  |   |       |  |    |                 +-----|
+|  |   |       |  |    |                 |     +--t16
+|  |   |       |  |    +-----------------|
+|  |   |       |  |                      +--t8
+|  |   |       +--|
+|  |   |          +--------------t12
+|  +---|
+|      |  +-----t10
+|      +--|
+|         |  +-------t6
+|         +--|
+|            +--t7
+|
+|               +-----------t14
+|  +------------|
+|  |            +----------t15
++--|
+   +---------t3
+
+Tree in newick format: (class branch lengths are given in [...] and separated by '/' )
+
+(t4[0.000002/0.138184/0.000002]:0.134679,(t5[1.627449/0.181588/0.000001]:0.207458,((((t9[0.000002/0.087812/0.000002]:0.085585,t17[0.207878/0.171751/0.000002]:0.171286)[0.000002/0.102911/0.000002]:0.100300,(t11[0.000002/0.202626/0.000002]:0.197486,t20[0.519101/0.190528/0.261615]:0.197154)[0.000002/0.008218/0.000002]:0.008010)[0.123221/0.021278/0.000002]:0.023046,(((t19[0.000002/0.105570/0.000002]:0.102892,t13[0.443016/0.164468/0.000001]:0.168592)[0.154889/0.019214/0.000002]:0.021627,((((t2[0.231239/0.178003/0.000002]:0.177817,t18[2.276983/0.127046/0.000001]:0.166463)[0.000003/0.031844/0.000002]:0.031036,t1[0.000002/0.146047/0.000001]:0.142342)[0.000003/0.027133/0.812318]:0.031842,t16[0.000002/0.040382/0.048687]:0.039681)[0.000003/0.116676/0.000002]:0.113716,t8[0.000002/0.002069/0.000028]:0.002017)[0.000003/0.348921/0.000001]:0.340069)[0.012761/0.109207/0.000001]:0.106675,t12[0.181957/0.275463/0.000001]:0.271882)[0.326890/0.016209/0.243093]:0.023534)[0.541345/0.146509/0.000003]:0.152929,(t10[0.489214/0.105321/0.000002]:0.111810,(t6[0.719198/0.146516/0.000002]:0.156267,t7[0.061006/0.003490/0.000002]:0.004544)[0.000003/0.023243/0.000002]:0.022654)[0.000002/0.031962/0.000003]:0.031151)[0.000003/0.077162/0.000002]:0.075204)[0.000003/0.031171/0.001920]:0.030393,((t14[0.000002/0.222940/0.000002]:0.217284,t15[3.331377/0.155932/0.000002]:0.214361)[0.000002/0.248465/0.000001]:0.242161,t3[0.168072/0.199282/0.000002]:0.197374)[0.000002/0.049256/0.000002]:0.048006);
+
+ALISIM COMMAND
+--------------
+Currently, we only support exporting AliSim commands automatically from the analysis for common models of DNA, Protein, Binary, and Morphological data. To simulate data from other models (mixture, lie-markov, etc), please refer to the User Manual of AliSim. Thanks!
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Thu Apr  9 13:40:21 2026
+Total CPU time used: 0.467849 seconds (0h:0m:0s)
+Total wall-clock time used: 0.551585 seconds (0h:0m:0s)
+

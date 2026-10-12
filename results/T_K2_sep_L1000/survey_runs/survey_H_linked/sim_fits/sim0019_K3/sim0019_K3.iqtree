@@ -1,0 +1,145 @@
+IQ-TREE 3.0.1 built May  5 2025
+
+Input file name: /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L1000/survey_runs/survey_H_linked/simulations/sim_8.phy
+Type of analysis: tree reconstruction
+Random seed number: 570896
+
+REFERENCES
+----------
+
+To cite IQ-TREE 3 please use:
+
+Thomas K.F. Wong, Nhan Ly-Trong, Huaiyan Ren, Hector Banos, Andrew J. Roger,
+Edward Susko, Chris Bielow, Nicola De Maio, Nick Goldman, Matthew W. Hahn,
+Gavin Huttley, Robert Lanfear, Bui Quang Minh (2025)
+IQ-TREE 3: Phylogenomic Inference Software using Complex Evolutionary Models.
+Submitted.
+
+Please also cite the following paper(s) for the feature(s) that you used:
+
+To cite the GHOST "+H" please use: 
+
+Stephen M Crotty, Bui Quang Minh, Nigel G Bean, Barbara R Holland, Jonathan Tuke, Lars S Jermiin, Arndt Von Haeseler (2020)
+GHOST: Recovering Historical Signal from Heterotachously Evolved Sequence Alignments.
+Systematic Biology, 69:249-264.
+https://doi.org/10.1093/sysbio/syz051
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 20 sequences with 1000 nucleotide sites
+Number of constant sites: 49 (= 4.9% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 49 (= 4.9% of all sites)
+Number of parsimony informative sites: 779
+Number of distinct site patterns: 909
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F+H3
+
+Rate parameter R:
+
+  A-C: 5.7367
+  A-G: 1.1115
+  A-T: 0.9061
+  C-G: 1.0542
+  C-T: 5.8157
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.314
+  pi(C) = 0.1876
+  pi(G) = 0.1855
+  pi(T) = 0.3129
+
+Rate matrix Q:
+
+  A   -0.8438      0.58    0.1111    0.1528
+  C    0.9709    -2.057    0.1054    0.9805
+  G    0.1881    0.1066   -0.4633    0.1686
+  T    0.1534     0.588   0.09997   -0.8413
+
+Model of rate heterogeneity: Rate heterotachy with 3 categories
+Heterotachy weights:      0.01486 0.982 0.003116
+Heterotachy tree lengths: 3.061 4.291 54.92
+
+ Category  Relative_rate  Proportion
+  1         1              0.01486
+  2         1              0.982
+  3         1              0.003116
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -14114.0189 (s.e. 170.2552)
+Unconstrained log-likelihood (without tree): -6693.8737
+Number of free parameters (#branches + #model parameters): 121
+Akaike information criterion (AIC) score: 28470.0379
+Corrected Akaike information criterion (AICc) score: 28503.6643
+Bayesian information criterion (BIC) score: 29063.8763
+
+Total tree length (sum of branch lengths): 4.4301
+Sum of internal branch lengths: 1.5178 (34.2621% of tree length)
+
+NOTE: Tree is UNROOTED although outgroup taxon 't4' is drawn at root
+NOTE: Branch lengths are weighted average over heterotachy classes
+
++------t4
+|
+|  +---------t5
++--|
+|  |                    +---t9
+|  |                +---|
+|  |                |   +------t17
+|  |             +--|
+|  |             |  |  +------t11
+|  |             |  +--|
+|  |             |     +----------t20
+|  |    +--------|
+|  |    |        |            +-----t19
+|  |    |        |         +--|
+|  |    |        |         |  +--------t13
+|  |    |        |  +------|
+|  |    |        |  |      |                          +--------t2
+|  |    |        |  |      |                       +--|
+|  |    |        |  |      |                       |  +-------t18
+|  |    |        |  |      |                    +--|
+|  |    |        |  |      |                    |  +----t1
+|  |    |        |  |      |               +----|
+|  |    |        |  |      |               |    +--t16
+|  |    |        |  |      +---------------|
+|  |    |        |  |                      +--t8
+|  |    |        +--|
+|  |    |           +-----------------t12
+|  +----|
+|       |  +----t10
+|       +--|
+|          |  +------t6
+|          +--|
+|             +**t7
+|
+|              +---------t14
+|  +-----------|
+|  |           +--------t15
++--|
+   +---------t3
+
+Tree in newick format: (class branch lengths are given in [...] and separated by '/' )
+
+(t4[0.126553/0.107345/9.999999]:0.138455,(t5[0.000232/0.205082/0.000002]:0.201398,((((t9[0.000002/0.082775/0.000002]:0.081287,t17[0.000001/0.155903/0.000002]:0.153100)[0.000003/0.082841/0.000002]:0.081352,(t11[0.000002/0.137141/0.000002]:0.134675,t20[0.000002/0.222601/0.000002]:0.218599)[0.000002/0.009012/0.000001]:0.008850)[0.000002/0.029710/10.000000]:0.060335,(((t19[0.000001/0.118819/0.000002]:0.116683,t13[2.096692/0.143950/0.239345]:0.173272)[0.000002/0.046459/0.000002]:0.045624,((((t2[0.000002/0.179011/1.624884]:0.180856,t18[0.342818/0.159963/0.540437]:0.163866)[0.000002/0.046364/0.000002]:0.045531,t1[0.076043/0.113066/0.000002]:0.112163)[0.000003/0.034356/0.000003]:0.033738,t16[0.000002/0.040886/0.000002]:0.040151)[0.000001/0.116537/0.000003]:0.114442,t8[0.000002/0.011709/0.000002]:0.011498)[0.000002/0.319717/0.000002]:0.313969)[0.000002/0.137931/0.000001]:0.135451,t12[0.346826/0.330093/9.999999]:0.360473)[0.000003/0.018230/0.000002]:0.017902)[0.000002/0.177358/0.000002]:0.174169,(t10[0.000002/0.106187/0.000002]:0.104278,(t6[0.000002/0.139000/1.371829]:0.140775,t7[0.000002/0.000002/0.000002]:0.000002)[0.000002/0.025061/0.000003]:0.024611)[0.000002/0.041608/0.000001]:0.040860)[0.000002/0.076701/10.000000]:0.106482)[0.000003/0.026413/0.022963]:0.026010,((t14[0.000002/0.195145/0.000002]:0.191636,t15[0.000002/0.194695/0.000002]:0.191195)[0.000001/0.207025/10.000000]:0.234462,t3[0.006238/0.198023/1.067408]:0.197882)[0.065589/0.053885/0.051547]:0.054051);
+
+ALISIM COMMAND
+--------------
+Currently, we only support exporting AliSim commands automatically from the analysis for common models of DNA, Protein, Binary, and Morphological data. To simulate data from other models (mixture, lie-markov, etc), please refer to the User Manual of AliSim. Thanks!
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Thu Apr  9 13:40:24 2026
+Total CPU time used: 0.440474 seconds (0h:0m:0s)
+Total wall-clock time used: 0.48393 seconds (0h:0m:0s)
+

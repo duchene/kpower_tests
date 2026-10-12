@@ -1,0 +1,102 @@
+IQ-TREE version 3.0.1 for MacOS ARM 64-bit built May  5 2025
+Developed by Bui Quang Minh, Thomas Wong, Nhan Ly-Trong, Huaiyan Ren
+Contributed by Lam-Tung Nguyen, Dominik Schrempf, Chris Bielow,
+Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
+
+Host:    SUN1020490 (SSE4.2, 32 GB RAM)
+Command: /Users/ctf150/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3 -s /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/simulations/sim_14.phy -m GTR+H2 --prefix /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/sim_fits/sim0006_K2/sim0006_K2 -T 1 --redo -wspm --fast
+Seed:    185854 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Wed Apr  8 07:22:31 2026
+Kernel:  SSE2 - 1 threads (10 CPU cores detected)
+
+HINT: Use -nt option to specify number of threads because your CPU has 10 cores!
+HINT: -nt AUTO will automatically determine the best number of threads to use.
+
+Reading alignment file /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/simulations/sim_14.phy ... Phylip format detected
+Alignment most likely contains DNA/RNA sequences
+Constructing alignment: done in 0.000525951 secs using 59.51% CPU
+Alignment has 20 sequences with 1000 columns, 932 distinct patterns
+819 parsimony-informative, 136 singleton sites, 45 constant sites
+Analyzing sequences: done in 4.31538e-05 secs using 76.47% CPU
+Checking for duplicate sequences: done in 5.79357e-05 secs using 81.12% CPU
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.00 seconds
+
+NOTE: 1 MB RAM (0 GB) is required!
+Estimate model parameters (epsilon = 0.50)
+Initial LogL: -15096.60, Site proportion and rates:  (0.00,166.36) (1.00,0.83)
+Making the rates more distinct...
+relative_treelen: 616.88 3.42
+1. Initial log-likelihood: -15076.04
+2. Current log-likelihood: -14272.23
+3. Current log-likelihood: -14251.32
+4. Current log-likelihood: -14249.58
+5. Current log-likelihood: -14247.41
+Optimal log-likelihood: -14246.81
+Rate parameters:  A-C: 5.31314  A-G: 1.17537  A-T: 1.17716  C-G: 1.08927  C-T: 5.66004  G-T: 1.00000
+Base frequencies:  A: 0.311  C: 0.196  G: 0.207  T: 0.286
+Heterotachy weights:      0.021 0.979
+Heterotachy tree lengths: 36.377 4.184
+Parameters optimization took 5 rounds (0.080 sec)
+Reordering classes by tree lengths
+Wrote distance file to... 
+Computing ML distances based on estimated model parameters...
+Calculating distance matrix: done in 0.000859022 secs using 99.07% CPU
+Computing ML distances took 0.000960 sec (of wall-clock time) 0.000928 sec (of CPU time)
+Setting up auxiliary I and S matrices: done in 2.7895e-05 secs using 60.94% CPU
+Constructing RapidNJ tree: done in 3.50475e-05 secs using 82.74% CPU
+Computing RapidNJ tree took 0.000104 sec (of wall-clock time) 0.000057 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -14266.081
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+
+Do NNI search on 2 best initial trees
+Optimizing NNI: done in 0.0216041 secs using 99.35% CPU
+Estimate model parameters (epsilon = 0.500)
+UPDATE BEST LOG-LIKELIHOOD: -14242.564
+Optimizing NNI: done in 0.040942 secs using 99.44% CPU
+Optimizing model parameters for top 2 candidate trees... 
+Estimate model parameters (epsilon = 0.050)
+Tree 1 / LogL: -14242.505
+Estimate model parameters (epsilon = 0.050)
+Tree 2 / LogL: -14262.225
+0.037 seconds
+Finish initializing candidate tree set (2)
+Current best tree score: -14242.505 / CPU time: 0.128
+Number of iterations: 2
+TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.050)
+1. Initial log-likelihood: -14244.032
+2. Current log-likelihood: -14242.375
+3. Current log-likelihood: -14242.133
+Optimal log-likelihood: -14242.122
+Rate parameters:  A-C: 5.37975  A-G: 1.17818  A-T: 1.18198  C-G: 1.09495  C-T: 5.73555  G-T: 1.00000
+Base frequencies:  A: 0.311  C: 0.196  G: 0.207  T: 0.286
+Heterotachy weights:      0.967 0.033
+Heterotachy tree lengths: 4.180 36.109
+Parameters optimization took 3 rounds (0.029 sec)
+BEST SCORE FOUND : -14242.122
+WARNING: Switch now to '-wspr' as it is the only option for non-mixture model
+Site probabilities per category printed to /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/sim_fits/sim0006_K2/sim0006_K2.siteprob
+Total tree length: 5.238
+
+Total number of iterations: 2
+CPU time used for tree search: 0.126 sec (0h:0m:0s)
+Wall-clock time used for tree search: 0.128 sec (0h:0m:0s)
+Total CPU time used: 0.327 sec (0h:0m:0s)
+Total wall-clock time used: 0.348 sec (0h:0m:0s)
+
+Analysis results written to: 
+  IQ-TREE report:                /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/sim_fits/sim0006_K2/sim0006_K2.iqtree
+  Maximum-likelihood tree:       /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/sim_fits/sim0006_K2/sim0006_K2.treefile
+  Likelihood distances:          /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/sim_fits/sim0006_K2/sim0006_K2.mldist
+  Site probability per rate/mix: /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/sim_fits/sim0006_K2/sim0006_K2.siteprob
+  Screen log file:               /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L1000/survey_runs/survey_H_linked/sim_fits/sim0006_K2/sim0006_K2.log
+
+Date and Time: Wed Apr  8 07:22:31 2026

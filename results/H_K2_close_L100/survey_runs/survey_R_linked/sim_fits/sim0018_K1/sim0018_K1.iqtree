@@ -1,0 +1,143 @@
+IQ-TREE 3.0.1 built May  5 2025
+
+Input file name: /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L100/survey_runs/survey_R_linked/simulations/sim_7.phy
+Type of analysis: tree reconstruction
+Random seed number: 568976
+
+REFERENCES
+----------
+
+To cite IQ-TREE 3 please use:
+
+Thomas K.F. Wong, Nhan Ly-Trong, Huaiyan Ren, Hector Banos, Andrew J. Roger,
+Edward Susko, Chris Bielow, Nicola De Maio, Nick Goldman, Matthew W. Hahn,
+Gavin Huttley, Robert Lanfear, Bui Quang Minh (2025)
+IQ-TREE 3: Phylogenomic Inference Software using Complex Evolutionary Models.
+Submitted.
+
+Please also cite the following paper(s) for the feature(s) that you used:
+
+SEQUENCE ALIGNMENT
+------------------
+
+Input data: 20 sequences with 100 nucleotide sites
+Number of constant sites: 3 (= 3% of all sites)
+Number of invariant (constant or ambiguous constant) sites: 3 (= 3% of all sites)
+Number of parsimony informative sites: 77
+Number of distinct site patterns: 98
+
+SUBSTITUTION PROCESS
+--------------------
+
+Model of substitution: GTR+F
+
+Rate parameter R:
+
+  A-C: 3.8463
+  A-G: 1.4186
+  A-T: 0.9386
+  C-G: 0.7468
+  C-T: 4.1750
+  G-T: 1.0000
+
+State frequencies: (empirical counts from alignment)
+
+  pi(A) = 0.2705
+  pi(C) = 0.1915
+  pi(G) = 0.18
+  pi(T) = 0.358
+
+Rate matrix Q:
+
+  A   -0.9026    0.5006    0.1736    0.2284
+  C    0.7072    -1.814   0.09137     1.016
+  G    0.2608   0.09721   -0.6014    0.2433
+  T    0.1726    0.5434    0.1223   -0.8384
+
+Model of rate heterogeneity: Uniform
+
+MAXIMUM LIKELIHOOD TREE
+-----------------------
+
+Log-likelihood of the tree: -1281.6775 (s.e. 44.5409)
+Unconstrained log-likelihood (without tree): -457.2212
+Number of free parameters (#branches + #model parameters): 45
+Akaike information criterion (AIC) score: 2653.3549
+Corrected Akaike information criterion (AICc) score: 2730.0216
+Bayesian information criterion (BIC) score: 2770.5876
+
+Total tree length (sum of branch lengths): 3.5859
+Sum of internal branch lengths: 1.3440 (37.4802% of tree length)
+
+WARNING: 2 near-zero internal branches (<0.0100) should be treated with caution
+         Such branches are denoted by '**' in the figure below
+
+NOTE: Tree is UNROOTED although outgroup taxon 't4' is drawn at root
+
++---t4
+|
++--------------t5
+|
+|                      +---------------t14
+|                +-----|
+|                |     +-------------t15
+|  +-------------|
+|  |             +---------------t3
++**|
+   |                +**t9
+   |             +--|
+   |             |  +----------t17
+   |         +---|
+   |         |   +--------t20
+   |      +**|
+   |      |  +-------t11
+   |  +---|
+   |  |   |              +--t19
+   |  |   |         +----|
+   |  |   |         |    +---------------------t13
+   |  |   +---------|
+   |  |             |      +-----t12
+   |  |             +------|
+   |  |                    |                           +----t2
+   |  |                    |                        +--|
+   |  |                    |                        |  +-----t18
+   |  |                    |                     +--|
+   |  |                    |                     |  +--t16
+   |  |                    |                  +--|
+   |  |                    |                  |  +**t8
+   |  |                    +------------------|
+   |  |                                       +--t1
+   +--|
+      |  +--t10
+      +--|
+         |       +---------t6
+         +-------|
+                 +**t7
+
+Tree in newick format:
+
+(t4:0.0620611099,t5:0.2240210849,(((t14:0.2257909214,t15:0.2004790420):0.0864895627,t3:0.2388543554):0.2041637970,(((((t9:0.0070049358,t17:0.1688385247):0.0195756261,t20:0.1408362342):0.0566395140,t11:0.1213897473):0.0006482519,((t19:0.0383685773,t13:0.3158046459):0.0816456593,(t12:0.0959490587,((((t2:0.0826993486,t18:0.0907539754):0.0319116409,t16:0.0267518648):0.0247017214,t8:0.0000020896):0.0516690264,t1:0.0260085219):0.2785260816):0.1109588912):0.1480062516):0.0633200659,(t10:0.0319770294,(t6:0.1442908173,t7:0.0000022290):0.1179407402):0.0218761191):0.0414303167):0.0044914588);
+
+ALISIM COMMAND
+--------------
+To simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis, you can use the following command:
+
+--alisim simulated_MSA -t /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L100/survey_runs/survey_R_linked/sim_fits/sim0018_K1/sim0018_K1.treefile -m "GTR{3.84631,1.41862,0.938612,0.746814,4.17502}+F{0.2705,0.1915,0.18,0.358}" --length 100
+
+To mimic the alignment used to produce this analysis, i.e. simulate an alignment of the same length as the original alignment, using the tree and model parameters estimated from this analysis *and* copying the same gap positions as the original alignment, you can use the following command:
+
+iqtree -s /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L100/survey_runs/survey_R_linked/simulations/sim_7.phy --alisim mimicked_MSA
+
+To simulate any number of alignments in either of the two commandlines above, use the --num-alignments options, for example mimic 100 alignments you would use the command line:
+
+iqtree -s /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/H_K2_close_L100/survey_runs/survey_R_linked/simulations/sim_7.phy --alisim mimicked_MSA --num-alignments 100
+
+For more information on using AliSim, please visit: www.iqtree.org/doc/AliSim
+
+TIME STAMP
+----------
+
+Date and time: Wed Apr  8 07:21:30 2026
+Total CPU time used: 0.016087 seconds (0h:0m:0s)
+Total wall-clock time used: 0.0587668 seconds (0h:0m:0s)
+

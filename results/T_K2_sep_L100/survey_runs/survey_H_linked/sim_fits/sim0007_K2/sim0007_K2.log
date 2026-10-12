@@ -1,0 +1,102 @@
+IQ-TREE version 3.0.1 for MacOS ARM 64-bit built May  5 2025
+Developed by Bui Quang Minh, Thomas Wong, Nhan Ly-Trong, Huaiyan Ren
+Contributed by Lam-Tung Nguyen, Dominik Schrempf, Chris Bielow,
+Olga Chernomor, Michael Woodhams, Diep Thi Hoang, Heiko Schmidt
+
+Host:    SUN1020490 (SSE4.2, 32 GB RAM)
+Command: /Users/ctf150/Desktop/Software/iqtree-3.0.1-macOS/bin/iqtree3 -s /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/simulations/sim_15.phy -m GTR+H2 --prefix /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/sim_fits/sim0007_K2/sim0007_K2 -T 1 --redo -wspm --fast
+Seed:    886407 (Using SPRNG - Scalable Parallel Random Number Generator)
+Time:    Thu Apr  9 13:39:27 2026
+Kernel:  SSE2 - 1 threads (10 CPU cores detected)
+
+HINT: Use -nt option to specify number of threads because your CPU has 10 cores!
+HINT: -nt AUTO will automatically determine the best number of threads to use.
+
+Reading alignment file /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/simulations/sim_15.phy ... Phylip format detected
+Alignment most likely contains DNA/RNA sequences
+Constructing alignment: done in 7.70092e-05 secs using 61.03% CPU
+Alignment has 20 sequences with 100 columns, 98 distinct patterns
+79 parsimony-informative, 16 singleton sites, 5 constant sites
+Analyzing sequences: done in 6.91414e-06 secs using 72.32% CPU
+Checking for duplicate sequences: done in 2.19345e-05 secs using 59.27% CPU
+
+Create initial parsimony tree by phylogenetic likelihood library (PLL)... 0.00 seconds
+
+NOTE: 0 MB RAM (0 GB) is required!
+Estimate model parameters (epsilon = 0.50)
+Initial LogL: -1471.45, Site proportion and rates:  (0.00,143.38) (1.00,0.86)
+Making the rates more distinct...
+relative_treelen: 533.99 3.53
+1. Initial log-likelihood: -1469.71
+2. Current log-likelihood: -1386.61
+3. Current log-likelihood: -1380.58
+Optimal log-likelihood: -1380.57
+Rate parameters:  A-C: 4.67388  A-G: 0.87303  A-T: 0.98234  C-G: 0.88234  C-T: 4.21216  G-T: 1.00000
+Base frequencies:  A: 0.323  C: 0.176  G: 0.161  T: 0.340
+Heterotachy weights:      0.010 0.990
+Heterotachy tree lengths: 24.712 4.226
+Parameters optimization took 3 rounds (0.010 sec)
+Reordering classes by tree lengths
+Wrote distance file to... 
+Computing ML distances based on estimated model parameters...
+Calculating distance matrix: done in 0.000537872 secs using 98.72% CPU
+Computing ML distances took 0.000577 sec (of wall-clock time) 0.000553 sec (of CPU time)
+Setting up auxiliary I and S matrices: done in 2.40803e-05 secs using 66.44% CPU
+Constructing RapidNJ tree: done in 3.60012e-05 secs using 80.55% CPU
+Computing RapidNJ tree took 0.000091 sec (of wall-clock time) 0.000057 sec (of CPU time)
+Log-likelihood of RapidNJ tree: -1375.808
+--------------------------------------------------------------------
+|             INITIALIZING CANDIDATE TREE SET                      |
+--------------------------------------------------------------------
+
+Do NNI search on 2 best initial trees
+Optimizing NNI: done in 0.00468111 secs using 99.25% CPU
+Estimate model parameters (epsilon = 0.500)
+BETTER TREE FOUND at iteration 1: -1371.408
+Optimizing NNI: done in 0.00760317 secs using 99.89% CPU
+Optimizing model parameters for top 3 candidate trees... 
+Estimate model parameters (epsilon = 0.050)
+Tree 1 / LogL: -1371.407
+Estimate model parameters (epsilon = 0.050)
+Tree 2 / LogL: -1372.059
+Estimate model parameters (epsilon = 0.050)
+Tree 3 / LogL: -1380.133
+0.007 seconds
+Finish initializing candidate tree set (3)
+Current best tree score: -1371.407 / CPU time: 0.027
+Number of iterations: 2
+TREE SEARCH COMPLETED AFTER 2 ITERATIONS / Time: 0h:0m:0s
+
+--------------------------------------------------------------------
+|                    FINALIZING TREE SEARCH                        |
+--------------------------------------------------------------------
+Performs final model parameters optimization
+Estimate model parameters (epsilon = 0.050)
+1. Initial log-likelihood: -1373.710
+2. Current log-likelihood: -1371.623
+3. Current log-likelihood: -1371.414
+Optimal log-likelihood: -1371.408
+Rate parameters:  A-C: 4.64275  A-G: 0.88689  A-T: 0.99890  C-G: 0.90680  C-T: 4.38480  G-T: 1.00000
+Base frequencies:  A: 0.323  C: 0.176  G: 0.161  T: 0.340
+Heterotachy weights:      0.939 0.061
+Heterotachy tree lengths: 4.188 5.340
+Parameters optimization took 3 rounds (0.005 sec)
+BEST SCORE FOUND : -1371.408
+WARNING: Switch now to '-wspr' as it is the only option for non-mixture model
+Site probabilities per category printed to /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/sim_fits/sim0007_K2/sim0007_K2.siteprob
+Total tree length: 4.258
+
+Total number of iterations: 2
+CPU time used for tree search: 0.025 sec (0h:0m:0s)
+Wall-clock time used for tree search: 0.027 sec (0h:0m:0s)
+Total CPU time used: 0.053 sec (0h:0m:0s)
+Total wall-clock time used: 0.072 sec (0h:0m:0s)
+
+Analysis results written to: 
+  IQ-TREE report:                /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/sim_fits/sim0007_K2/sim0007_K2.iqtree
+  Maximum-likelihood tree:       /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/sim_fits/sim0007_K2/sim0007_K2.treefile
+  Likelihood distances:          /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/sim_fits/sim0007_K2/sim0007_K2.mldist
+  Site probability per rate/mix: /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/sim_fits/sim0007_K2/sim0007_K2.siteprob
+  Screen log file:               /Users/ctf150/Dropbox/Research/hiv_mast/kpower_tests/results/T_K2_sep_L100/survey_runs/survey_H_linked/sim_fits/sim0007_K2/sim0007_K2.log
+
+Date and Time: Thu Apr  9 13:39:27 2026
