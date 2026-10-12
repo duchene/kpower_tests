@@ -1,6 +1,6 @@
 # kpower simulation tests -- shared publication figure theme
 #
-# Sourced by 03_-06_. Defines the palettes, theme, scales and save helpers so
+# Sourced by the 03_+ plotting scripts. Defines the palettes, theme, scales and save helpers so
 # every figure in the manuscript is typographically and chromatically
 # consistent. Reads and writes nothing.
 #

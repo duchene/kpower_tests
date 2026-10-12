@@ -42,8 +42,8 @@ Rscript 02_run_kpower_tests.R
 # 3-6. Build figures from results/ (fast; cache-backed)
 Rscript 03_plot_power.R       # recovery heatmaps (AIC/AICc/BIC) + power line/per-rep plots
 Rscript 04_selection_plot.R   # per-bootstrap family-selection plots
-Rscript 05_tree_metrics.R     # stemminess & root-to-tip CoV, empirical vs reps across K
-Rscript 06_ic_profiles.R      # IC-through-K overlays (AIC/AICc/BIC), empirical vs reps
+Rscript 09_tree_metrics.R     # stemminess & root-to-tip CoV, empirical vs reps across K
+Rscript 10_ic_profiles.R      # IC-through-K overlays (AIC/AICc/BIC), empirical vs reps
 ```
 
 Results are written to `results/summary.csv` and per-scenario RDS/PDF
@@ -131,8 +131,8 @@ kpower_tests/
   02_run_kpower_tests.R         # Run kpower_survey on each, write summary
   03_plot_power.R               # Recovery heatmaps (AIC/AICc/BIC) + power plots
   04_selection_plot.R           # Per-bootstrap family-selection plots
-  05_tree_metrics.R             # Stemminess & root-to-tip CoV across K
-  06_ic_profiles.R              # IC-through-K overlays (AIC/AICc/BIC)
+  09_tree_metrics.R             # Stemminess & root-to-tip CoV across K
+  10_ic_profiles.R              # IC-through-K overlays (AIC/AICc/BIC)
   alignments/                   # Simulated data (not tracked in git)
     test_tree.nwk
     <scenario>/sim.phy
