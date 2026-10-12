@@ -243,6 +243,59 @@ heatmap_for_ic <- function(ic) {
 
 for (ic in IC_LEVELS) heatmap_for_ic(ic)
 
+# Split heatmap (BIC) ---------------------------------------------------------
+# Split into two diagnostics so it's clear WHERE power is lost:
+#   (a) Correct family      = P(picks the true family)
+#   (b) Correct K | family  = P(picks true K | it already picked the true family)
+# A merged "family AND K" cell hides whether a failure was a wrong-family call
+# or a right-family/wrong-K call -- very different diagnoses.
+hcount <- aggregate(
+  cbind(n    = 1L,
+        fam  = as.integer(raw$correct_family),
+        famK = as.integer(raw$correct_family & raw$correct_K)) ~
+    scenario + true_type + true_K + tag + seq_length,
+  data = raw, FUN = sum, na.rm = TRUE)
+
+mk_row_label <- function(tt, tg) factor(
+  paste0(tt, " ", tg),
+  levels = c("+R sep", "+R close", "+H sep", "+H close", "+T sep", "+T close"))
+
+hm <- rbind(
+  data.frame(hcount[c("true_type", "true_K", "tag", "seq_length")],
+             metric = "Correct family",
+             value  = hcount$fam / hcount$n),
+  data.frame(hcount[c("true_type", "true_K", "tag", "seq_length")],
+             metric = "Correct K | family",
+             value  = ifelse(hcount$fam > 0, hcount$famK / hcount$fam, NA_real_))
+)
+hm$metric    <- factor(hm$metric,
+                       levels = c("Correct family", "Correct K | family"))
+hm$row_label <- mk_row_label(hm$true_type, hm$tag)
+# Tile ink follows the fill; grey dash for "n/a" (family never recovered, so K
+# is undefined).
+hm$txt <- ifelse(is.na(hm$value), "grey35", label_ink_for_fill(hm$value))
+hm$lab <- ifelse(is.na(hm$value), "–", sprintf("%.0f%%", 100 * hm$value))
+
+heatmap_plot <- ggplot(hm, aes(x = factor(seq_length),
+                               y = row_label, fill = value)) +
+  geom_tile(colour = "white") +
+  geom_text(aes(label = lab, colour = txt), size = 2.8, show.legend = FALSE) +
+  facet_grid(metric ~ paste("K =", true_K)) +
+  scale_fill_gradientn(colours = SEQ_COLOURS,
+                       limits = c(0, 1), breaks = seq(0, 1, 0.25),
+                       labels = label_percent(accuracy = 1),
+                       name = "P", na.value = "grey90") +
+  scale_colour_identity() +
+  scale_y_discrete(limits = rev) +
+  fig_labs(x = "Sequence length (sites)", y = NULL,
+       title = sprintf("Where recovery succeeds and fails (mean across %d reps, BIC)",
+                       n_reps_used)) +
+  theme_kpower(grid = "none") +
+  theme(axis.ticks = element_blank(), legend.position = "right")
+
+save_fig(heatmap_plot, file.path(OUT_BASE, "power_heatmap_split.pdf"),
+         width = "onehalf", height = 6.0)
+
 
 # 2. Line plots -------------------------------------------------------------
 # Every series carries two encodings (hue + dash, or hue + panel) so identity
