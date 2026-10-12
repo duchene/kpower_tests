@@ -83,7 +83,7 @@ and bootstrap replicates overwhelmingly favor K=2.
 
 **Step 1: Alignment and clade separation**
 ```bash
-Rscript 03_filovirus_prep_alignment.R
+Rscript filovirus_01_prep_alignment.R
 ```
 - Filters to ~100 taxa per genus (Orthoebolavirus, Orthomarburgvirus + Mengla/Dehong)
 - Removes sequences with excessive divergence (genetic distance p > 0.45, saturated)
@@ -93,7 +93,7 @@ Rscript 03_filovirus_prep_alignment.R
 
 **Step 2: Gblocks filtering**
 ```bash
-Rscript 03b_filovirus_gblocks_filter.R
+Rscript filovirus_01b_gblocks_filter.R
 ```
 - Reduces alignment expansion and removes gappy regions
 - Strict filter (used for analysis): 14,653 sites (ebola), 16,227 (marburg)
@@ -101,7 +101,7 @@ Rscript 03b_filovirus_gblocks_filter.R
 
 **Step 3: kpower_survey (B=100)**
 ```bash
-Rscript 04_filovirus_kpower_survey.R
+Rscript filovirus_02_kpower_survey.R
 ```
 - Runs `kpower_survey()` on each clade for +R, +H, +T
 - K range: 1–5 for +R/+H; 1–4 for +T (cost optimization; K_best well below boundary)
@@ -124,9 +124,9 @@ From the `kpower_tests/` directory:
 #                IQ-TREE 3 (must be in PATH or ~/Desktop/Software/...)
 
 # Full analysis (skips steps already completed)
-Rscript 03_filovirus_prep_alignment.R     # ~2 min
-Rscript 03b_filovirus_gblocks_filter.R    # ~5 min
-Rscript 04_filovirus_kpower_survey.R      # ~15 hours
+Rscript filovirus_01_prep_alignment.R     # ~2 min
+Rscript filovirus_01b_gblocks_filter.R    # ~5 min
+Rscript filovirus_02_kpower_survey.R      # ~15 hours
 
 # Results:
 cat results/filovirus/survey_summary.txt
